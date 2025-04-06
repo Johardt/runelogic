@@ -13,21 +13,20 @@ import {
   DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 
-// Define the simplified structure for an action
+// Define the structure for an action
 interface Action {
   id: string;
   uiName: string;
   prefix: string;
 }
 
-// Define available actions without isSayAction and placeholderSuffix
+// Define available actions
 const availableActions: Action[] = [
-  { id: "attempt", uiName: "Attempt to", prefix: "You attempt to " },
-  { id: "plan", uiName: "Plan to", prefix: "You plan to " },
-  { id: "whisper", uiName: "Whisper", prefix: "You whisper " },
-  { id: "say", uiName: "Say", prefix: "You say " },
-  { id: "shout", uiName: "Shout", prefix: "You shout " },
-  // Add more actions here
+  { id: "attempt", uiName: "Attempt", prefix: "You attempt to" },
+  { id: "plan", uiName: "Plan", prefix: "You plan to" },
+  { id: "whisper", uiName: "Whisper", prefix: "You whisper" },
+  { id: "say", uiName: "Say", prefix: "You say" },
+  { id: "shout", uiName: "Shout", prefix: "You shout" },
 ];
 
 // Helper array for identifying say actions by id
@@ -59,7 +58,7 @@ export default function Chat() {
         if (m.role === 'user') {
           const actionPrefix = availableActions.find(action => m.content.startsWith(action.prefix));
           if (actionPrefix) {
-            prefixPart = actionPrefix.prefix;
+            prefixPart = actionPrefix.prefix + " ";
             contentPart = m.content.substring(actionPrefix.prefix.length);
           } else {
             prefixPart = "User: ";
@@ -117,7 +116,7 @@ export default function Chat() {
           </DropdownMenu>
           <Input
             value={input}
-            placeholder={selectedAction.uiName + "..."}
+            placeholder={selectedAction.prefix + "..."}
             onChange={handleInputChange}
             className="flex-1"
           />
