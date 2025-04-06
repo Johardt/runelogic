@@ -1,17 +1,6 @@
 import { useState, useMemo } from "react";
 import { useChat } from "@ai-sdk/react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-  DropdownMenuPortal,
-} from "@/components/ui/dropdown-menu";
+import { ChatInput } from "@/components/chat-input";
 
 // Define the structure for an action
 interface Action {
@@ -33,96 +22,89 @@ const availableActions: Action[] = [
 const sayActionIds = ["whisper", "say", "shout"];
 
 export default function Chat() {
-  const { messages, input, handleInputChange, append, setInput } = useChat();
+  const { messages, input, handleInputChange, append, setInput } = useChat({
+    api: '/api/chat',
+  });
+  
   const [selectedActionId, setSelectedActionId] = useState<string>("attempt");
 
   const selectedAction = useMemo(() => {
     return availableActions.find(action => action.id === selectedActionId) || availableActions[0];
   }, [selectedActionId]);
 
-  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  // Handle form submission with action prefix
+  const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+    
     if (!input.trim()) return;
-    const prefix = selectedAction.prefix;
-    const messageContent = `${prefix}${input}`;
-    append({ role: 'user', content: messageContent });
+    
+    // Create content with action prefix
+    const messageContent = `${selectedAction.prefix} ${input}`;
+    
+    // Use append from useChat to add the message
+    append({
+      role: 'user',
+      content: messageContent,
+    });
+    
+    // Clear input (though useChat will handle this automatically)
     setInput('');
   };
 
   return (
-    <div className="flex flex-col w-full max-w-2xl py-24 mx-auto stretch">
-      {messages.map(m => {
-        let prefixPart = '';
-        let contentPart = m.content;
-
-        if (m.role === 'user') {
-          const actionPrefix = availableActions.find(action => m.content.startsWith(action.prefix));
-          if (actionPrefix) {
-            prefixPart = actionPrefix.prefix + " ";
-            contentPart = m.content.substring(actionPrefix.prefix.length);
-          } else {
-            prefixPart = "User: ";
-          }
-        }
-
-        return (
-          <div key={m.id} className="whitespace-pre-wrap mb-2 p-2 border rounded">
-            {m.role === 'assistant' ? (
-              <>
-                <span className="font-bold">AI: </span>
-                {m.content}
-              </>
-            ) : (
-              <>
-                <span className="font-bold">{prefixPart}</span>
-                {contentPart}
-              </>
-            )}
+    <div className="flex flex-col max-w-2xl w-full mx-auto p-4">
+      {/* Messages container */}
+      <div className="mb-16">
+        {messages.length === 0 ? (
+          <div className="py-8 text-center text-gray-500">
+            Your adventure begins here...
           </div>
-        );
-      })}
+        ) : (
+          <div className="space-y-4">
+            {messages.map(m => {
+              // For user messages, handle action prefixes for display
+              let prefixPart = '';
+              let contentPart = m.content;
 
-      <form onSubmit={handleFormSubmit} className="fixed bottom-0 w-full max-w-2xl p-2 mb-8">
-        <div className="flex w-full items-center space-x-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="w-32">{selectedAction.uiName}</Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                  <span>Say...</span>
-                </DropdownMenuSubTrigger>
-                <DropdownMenuPortal>
-                  <DropdownMenuSubContent>
-                    {availableActions
-                      .filter(action => sayActionIds.includes(action.id))
-                      .map(action => (
-                        <DropdownMenuItem key={action.id} onSelect={() => setSelectedActionId(action.id)}>
-                          {action.uiName}
-                        </DropdownMenuItem>
-                      ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuPortal>
-              </DropdownMenuSub>
-              {availableActions
-                .filter(action => !sayActionIds.includes(action.id))
-                .map(action => (
-                  <DropdownMenuItem key={action.id} onSelect={() => setSelectedActionId(action.id)}>
-                    {action.uiName}
-                  </DropdownMenuItem>
-                ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Input
-            value={input}
-            placeholder={selectedAction.prefix + "..."}
-            onChange={handleInputChange}
-            className="flex-1"
-          />
-          <Button type="submit">Send</Button>
-        </div>
-      </form>
+              if (m.role === 'user') {
+                const actionPrefix = availableActions.find(action => m.content.startsWith(action.prefix));
+                if (actionPrefix) {
+                  prefixPart = actionPrefix.prefix + " ";
+                  contentPart = m.content.substring(actionPrefix.prefix.length);
+                } else {
+                  prefixPart = "User: ";
+                }
+                
+                return (
+                  <div key={m.id} className="whitespace-pre-wrap p-3 border rounded">
+                    <span className="font-bold">{prefixPart}</span>
+                    {contentPart}
+                  </div>
+                );
+              } else {
+                // Assistant message
+                return (
+                  <div key={m.id} className="whitespace-pre-wrap p-3 border rounded bg-gray-50">
+                    <span className="font-bold">AI: </span>
+                    {m.content}
+                  </div>
+                );
+              }
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Use the ChatInput component */}
+      <ChatInput 
+        input={input}
+        handleInputChange={handleInputChange}
+        handleSubmit={handleSubmit}
+        selectedAction={selectedAction}
+        setSelectedActionId={setSelectedActionId}
+        availableActions={availableActions}
+        sayActionIds={sayActionIds}
+      />
     </div>
   );
 }
