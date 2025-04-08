@@ -23,32 +23,34 @@ const sayActionIds = ["whisper", "say", "shout"];
 
 export default function Chat() {
   const { messages, input, handleInputChange, append, setInput } = useChat({
-    api: '/api/chat',
+    api: "/api/chat",
   });
-  
+
   const [selectedActionId, setSelectedActionId] = useState<string>("attempt");
 
   const selectedAction = useMemo(() => {
-    return availableActions.find(action => action.id === selectedActionId) || availableActions[0];
+    return (
+      availableActions.find((action) => action.id === selectedActionId) ||
+      availableActions[0]
+    );
   }, [selectedActionId]);
 
   // Handle form submission with action prefix
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    
+
     if (!input.trim()) return;
-    
+
     // Create content with action prefix
     const messageContent = `${selectedAction.prefix} ${input}`;
-    
+
     // Use append from useChat to add the message
     append({
-      role: 'user',
+      role: "user",
       content: messageContent,
     });
-    
-    // Clear input (though useChat will handle this automatically)
-    setInput('');
+
+    setInput("");
   };
 
   return (
@@ -61,31 +63,50 @@ export default function Chat() {
           </div>
         ) : (
           <div className="space-y-4">
-            {messages.map(m => {
+            {messages.map((m) => {
               // For user messages, handle action prefixes for display
-              let prefixPart = '';
+              let prefixPart = "";
               let contentPart = m.content;
 
-              if (m.role === 'user') {
-                const actionPrefix = availableActions.find(action => m.content.startsWith(action.prefix));
+              if (m.role === "user") {
+                const actionPrefix = availableActions.find((action) =>
+                  m.content.startsWith(action.prefix)
+                );
                 if (actionPrefix) {
                   prefixPart = actionPrefix.prefix + " ";
                   contentPart = m.content.substring(actionPrefix.prefix.length);
                 } else {
                   prefixPart = "User: ";
                 }
-                
+
                 return (
-                  <div key={m.id} className="whitespace-pre-wrap p-3 border rounded">
+                  <div
+                    key={m.id}
+                    className="whitespace-pre-wrap p-3 border rounded"
+                  >
                     <span className="font-bold">{prefixPart}</span>
                     {contentPart}
                   </div>
                 );
-              } else {
+              } else if (m.role === "assistant") {
                 // Assistant message
                 return (
-                  <div key={m.id} className="whitespace-pre-wrap p-3 border rounded bg-gray-50">
+                  <div
+                    key={m.id}
+                    className="whitespace-pre-wrap p-3 border rounded bg-gray-50"
+                  >
                     <span className="font-bold">AI: </span>
+                    {m.content}
+                  </div>
+                );
+              } else if (m.role === "system") {
+                // System message
+                return (
+                  <div
+                    key={m.id}
+                    className="whitespace-pre-wrap p-3 border rounded bg-gray-100"
+                  >
+                    <span className="font-bold">System: </span>
                     {m.content}
                   </div>
                 );
@@ -96,7 +117,7 @@ export default function Chat() {
       </div>
 
       {/* Use the ChatInput component */}
-      <ChatInput 
+      <ChatInput
         input={input}
         handleInputChange={handleInputChange}
         handleSubmit={handleSubmit}
