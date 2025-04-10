@@ -57,9 +57,12 @@ export function LoginForm({
                 </Button>
               </div>
             </div>
-            <div className="mt-4 text-sm text-center">
+            <div className="mt-4 text-sm text-center text-muted-foreground">
               Don&apos;t have an account?{" "}
-              <a href="/signup" className="underline underline-offset-4">
+              <a
+                href="/signup"
+                className="underline underline-offset-4 hover:text-primary"
+              >
                 Sign up
               </a>
             </div>

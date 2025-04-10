@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signup } from "@/app/(auth)/actions";
+import Link from "next/link";
 
 export function SignupForm({
   className,
@@ -20,9 +21,12 @@ export function SignupForm({
       <Card>
         <CardHeader>
           <div className="text-sm text-right">
-            <a href="/login" className="text-muted-foreground hover:underline">
+            <Link
+              href="/login"
+              className="underline text-muted-foreground hover:text-primary"
+            >
               Login
-            </a>
+            </Link>
           </div>
           <CardTitle>Create an account</CardTitle>
           <CardDescription>
@@ -69,19 +73,19 @@ export function SignupForm({
 
           <p className="px-8 my-4 text-sm text-center text-muted-foreground">
             By clicking continue, you agree to our{" "}
-            <a
+            <Link
               href="/terms"
               className="underline underline-offset-4 hover:text-primary"
             >
               Terms of Service
-            </a>{" "}
+            </Link>{" "}
             and{" "}
-            <a
+            <Link
               href="/privacy"
               className="underline underline-offset-4 hover:text-primary"
             >
               Privacy Policy
-            </a>
+            </Link>
             .
           </p>
         </CardContent>
