@@ -70,7 +70,7 @@ export default function Chat() {
 
               if (m.role === "user") {
                 const actionPrefix = availableActions.find((action) =>
-                  m.content.startsWith(action.prefix)
+                  m.content.startsWith(action.prefix),
                 );
                 if (actionPrefix) {
                   prefixPart = actionPrefix.prefix + " ";

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import Chat from '@/components/chat';
+import Chat from "@/components/chat";
 
 export default function GamePage() {
   return (
@@ -8,4 +8,4 @@ export default function GamePage() {
       <Chat />
     </main>
   );
-} 
+}

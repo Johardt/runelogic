@@ -41,10 +41,15 @@ export function ChatInput({
   return (
     <div className="fixed bottom-0 left-0 right-0 p-4 bg-white">
       <div className="max-w-2xl mx-auto">
-        <form onSubmit={handleSubmit} className="flex w-full items-center space-x-2 border rounded-lg p-2">
+        <form
+          onSubmit={handleSubmit}
+          className="flex w-full items-center space-x-2 border rounded-lg p-2"
+        >
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="w-32">{selectedAction.uiName}</Button>
+              <Button variant="outline" className="w-32">
+                {selectedAction.uiName}
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-48">
               <DropdownMenuSub>
@@ -54,9 +59,12 @@ export function ChatInput({
                 <DropdownMenuPortal>
                   <DropdownMenuSubContent>
                     {availableActions
-                      .filter(action => sayActionIds.includes(action.id))
-                      .map(action => (
-                        <DropdownMenuItem key={action.id} onSelect={() => setSelectedActionId(action.id)}>
+                      .filter((action) => sayActionIds.includes(action.id))
+                      .map((action) => (
+                        <DropdownMenuItem
+                          key={action.id}
+                          onSelect={() => setSelectedActionId(action.id)}
+                        >
                           {action.uiName}
                         </DropdownMenuItem>
                       ))}
@@ -64,9 +72,12 @@ export function ChatInput({
                 </DropdownMenuPortal>
               </DropdownMenuSub>
               {availableActions
-                .filter(action => !sayActionIds.includes(action.id))
-                .map(action => (
-                  <DropdownMenuItem key={action.id} onSelect={() => setSelectedActionId(action.id)}>
+                .filter((action) => !sayActionIds.includes(action.id))
+                .map((action) => (
+                  <DropdownMenuItem
+                    key={action.id}
+                    onSelect={() => setSelectedActionId(action.id)}
+                  >
                     {action.uiName}
                   </DropdownMenuItem>
                 ))}
@@ -83,4 +94,4 @@ export function ChatInput({
       </div>
     </div>
   );
-} 
+}
