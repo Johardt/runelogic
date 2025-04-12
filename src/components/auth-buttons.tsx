@@ -33,7 +33,7 @@ export async function AuthButtons() {
     return (
       <div className="flex flex-row items-center space-x-4">
         <Link href="/user/inbox" className="flex items-center">
-          <Mail color="text-neutral-800" size={32}></Mail>
+          <Mail color="text-neutral-800" size={32} />
         </Link>
         <NavigationMenu>
           <NavigationMenuList>
