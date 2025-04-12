@@ -97,8 +97,11 @@ export default async function PrivatePage() {
                 placeholder="Enter your AI API key"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Your API key is stored securely and used to interact with AI
-                services. Currently, only OpenAI API keys are supported.
+                Your API key is stored securely (encrypted) and used to interact
+                with AI services.
+              </p>
+              <p className="text-xs mt-1">
+                Currently, only OpenAI API keys are supported.
               </p>
             </div>
 
