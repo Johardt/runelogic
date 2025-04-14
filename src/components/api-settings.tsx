@@ -9,12 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { AiModelType } from "@/db/schema";
 import { toast } from "sonner";
 import { encrypt, decrypt } from "@/utils/encryption";
-
-const STORAGE_KEYS = {
-  API_KEY: "ai_api_key",
-  MODEL: "ai_model",
-  STORAGE_TYPE: "storage_type"
-};
+import { STORAGE_KEYS } from "@/utils/local-storage";
 
 const DEFAULT_MODEL: AiModelType = "gpt-4o-mini";
 
@@ -24,6 +19,58 @@ export function ApiSettings() {
   const [storageType, setStorageType] = useState<"server" | "client">("server");
   const [isSaving, setIsSaving] = useState(false);
   const [serverModel, setServerModel] = useState<AiModelType | null>(null);
+  const [isClient, setIsClient] = useState(false);
+
+  // Check localStorage after component mounts
+  useEffect(() => {
+    setIsClient(true);
+    const savedStorageType = localStorage.getItem(STORAGE_KEYS.STORAGE_TYPE);
+    if (savedStorageType === 'client') {
+      setStorageType('client');
+    }
+    
+    // Make sure we sync data after storage type is set
+    const loadSettings = async () => {
+      // Try to get server data
+      try {
+        const response = await fetch("/api/profile/settings");
+        const data = await response.json();
+        if (data.model) {
+          setServerModel(data.model);
+          // Set model and API key if we're using server storage
+          if (savedStorageType !== 'client') {
+            setModel(data.model);
+            if (data.apiKey) {
+              setApiKey(data.apiKey);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch server settings:", error);
+      }
+
+      // Check local storage if we're using client storage
+      if (savedStorageType === 'client') {
+        try {
+          const storedApiKey = await getStorageValue(STORAGE_KEYS.API_KEY);
+          const storedModel = await getStorageValue(STORAGE_KEYS.MODEL) as AiModelType | null;
+          
+          if (storedApiKey) setApiKey(storedApiKey);
+          if (storedModel) setModel(storedModel);
+        } catch (error) {
+          console.error("Failed to load client settings:", error);
+          // If we can't load client settings, fall back to server
+          setStorageType("server");
+          localStorage.setItem(STORAGE_KEYS.STORAGE_TYPE, "server");
+          if (serverModel) {
+            setModel(serverModel);
+          }
+        }
+      }
+    };
+
+    loadSettings();
+  }, []);
 
   // Function to get the encryption key from the server
   const getEncryptionKey = async (): Promise<string> => {
@@ -55,52 +102,6 @@ export function ApiSettings() {
     const encrypted = await encrypt(value, encryptionKey);
     localStorage.setItem(key, encrypted);
   };
-
-  useEffect(() => {
-    const loadSettings = async () => {
-      // Check storage type preference
-      const savedStorageType = localStorage.getItem(STORAGE_KEYS.STORAGE_TYPE) as "server" | "client" | null;
-      if (savedStorageType) {
-        setStorageType(savedStorageType);
-      }
-
-      // Then try to get server data
-      try {
-        const response = await fetch("/api/profile/settings");
-        const data = await response.json();
-        if (data.model) {
-          setServerModel(data.model);
-          // Only set the model if we're using server storage
-          if (savedStorageType !== "client") {
-            setModel(data.model);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch server settings:", error);
-      }
-
-      // Finally check local storage if we're using client storage
-      if (savedStorageType === "client") {
-        try {
-          const storedApiKey = await getStorageValue(STORAGE_KEYS.API_KEY);
-          const storedModel = await getStorageValue(STORAGE_KEYS.MODEL) as AiModelType | null;
-          
-          if (storedApiKey) setApiKey(storedApiKey);
-          if (storedModel) setModel(storedModel);
-        } catch (error) {
-          console.error("Failed to load client settings:", error);
-          // If we can't load client settings, fall back to server
-          setStorageType("server");
-          localStorage.setItem(STORAGE_KEYS.STORAGE_TYPE, "server");
-          if (serverModel) {
-            setModel(serverModel);
-          }
-        }
-      }
-    };
-
-    loadSettings();
-  }, []);
 
   const handleStorageTypeChange = (value: "server" | "client") => {
     setStorageType(value);
@@ -170,19 +171,24 @@ export function ApiSettings() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Storage Location</Label>
-            <Select
-              value={storageType}
-              onValueChange={handleStorageTypeChange}
-              defaultValue="server"
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select storage location" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="server">Store on Server (Recommended)</SelectItem>
-                <SelectItem value="client">Store on My Device</SelectItem>
-              </SelectContent>
-            </Select>
+            {isClient ? (
+              <Select
+                value={storageType}
+                onValueChange={handleStorageTypeChange}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="server">Store on Server (Recommended)</SelectItem>
+                  <SelectItem value="client">Store on My Device</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="h-10 px-3 py-2 border rounded-md bg-background text-sm">
+                Store on Server (Recommended)
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">
               {storageType === "server"
                 ? "Your API key will be stored securely (encrypted) on our servers."

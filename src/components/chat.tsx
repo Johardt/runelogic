@@ -1,7 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useChat } from "@ai-sdk/react";
 import { ChatInput } from "@/components/chat-input";
 import { Badge } from "@/components/ui/badge";
+import { AiModelType } from "@/db/schema";
+import { decrypt } from "@/utils/encryption";
+import { STORAGE_KEYS } from "@/utils/local-storage";
+
 
 // Define the structure for an action
 interface Action {
@@ -23,8 +27,58 @@ const availableActions: Action[] = [
 const sayActionIds = ["whisper", "say", "shout"];
 
 export default function Chat() {
+  // Get client settings
+  const [clientSettings, setClientSettings] = useState<{
+    storageType: string | null;
+    apiKey: string | null;
+    model: AiModelType | null;
+  } | null>(null);
+
+  // Load client settings on component mount
+  useEffect(() => {
+    const loadClientSettings = async () => {
+      const storageType = localStorage.getItem(STORAGE_KEYS.STORAGE_TYPE);
+      
+      if (storageType === 'client') {
+        try {
+          // Get encryption key from server
+          const keyResponse = await fetch('/api/profile/key', {
+            method: 'POST',
+          });
+          
+          if (keyResponse.ok) {
+            const { key } = await keyResponse.json();
+            
+            // Get encrypted values
+            const encryptedApiKey = localStorage.getItem(STORAGE_KEYS.API_KEY);
+            const encryptedModel = localStorage.getItem(STORAGE_KEYS.MODEL);
+            
+            // Decrypt values if they exist
+            if (encryptedApiKey) {
+              const apiKey = await decrypt(encryptedApiKey, key);
+              const model = encryptedModel ? await decrypt(encryptedModel, key) as AiModelType : null;
+              
+              setClientSettings({
+                storageType,
+                apiKey,
+                model
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Failed to load client settings:", error);
+        }
+      }
+    };
+    
+    loadClientSettings();
+  }, []);
+
   const { messages, input, handleInputChange, append, setInput } = useChat({
     api: "/api/chat",
+    body: {
+      clientSettings
+    }
   });
 
   const [selectedActionId, setSelectedActionId] = useState<string>("attempt");

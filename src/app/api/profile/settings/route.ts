@@ -19,6 +19,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       model: userInfos[0].ai_model,
+      apiKey: userInfos[0].ai_api_key
     });
   } catch (error) {
     console.error("Failed to fetch user info:", error);
@@ -50,7 +51,7 @@ export async function POST(req: Request) {
   try {
     await updateUserInfo({
       id: data.user.id,
-      username: "", // Preserve existing username
+      username: undefined,
       ai_api_key: aiApiKey,
       ai_model: aiModel,
     });

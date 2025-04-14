@@ -4,11 +4,9 @@ import { rollDiceTool } from "@/lib/tools";
 import { createClient } from "@/utils/supabase/server";
 import { selectUserInfo } from "@/app/profile/actions";
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { decrypt } from "@/utils/server-encryption";
 
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+  const { messages, clientSettings } = await req.json();
 
   const supabase = createClient();
 
@@ -19,20 +17,18 @@ export async function POST(req: Request) {
     return NextResponse.error;
   }
 
-  // Check for client-stored API key first
-  const cookieStore = await cookies();
-  const encryptedApiKey = cookieStore.get("ai_api_key")?.value;
-  const encryptedModel = cookieStore.get("ai_model")?.value;
-
   let apiKey: string | null = null;
   let model: string | null = null;
 
-  if (encryptedApiKey) {
-    // Use client-stored settings
-    apiKey = decrypt(encryptedApiKey);
-    model = encryptedModel ? decrypt(encryptedModel) : "gpt-4o-mini";
+  // Check if client settings were passed in the request
+  if (clientSettings?.storageType === "client" && clientSettings.apiKey) {
+    // Use client-stored settings from the request
+    console.log("Using client-stored settings");
+    apiKey = clientSettings.apiKey;
+    model = clientSettings.model || "gpt-4o-mini";
   } else {
     // Fall back to server-stored settings
+    console.log("Using server-stored settings");
     let userInfo = await selectUserInfo(data.user.id).then((infos) => {
       return infos[0];
     });
