@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { users_info, AiModelType } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { encrypt, decrypt } from "@/utils/encryption";
+import { encrypt, decrypt } from "@/utils/server-encryption";
 
 export async function selectUserInfo(user_id: string) {
   const userInfos = await db
