@@ -1,7 +1,7 @@
 import { db } from "@/db";
-import { users_info, AiModelType } from "@/db/schema";
+import { users_info, InsertUsersInfo } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { encrypt, decrypt } from "@/utils/encryption";
+import { encrypt, decrypt } from "@/utils/server-encryption";
 
 export async function selectUserInfo(user_id: string) {
   const userInfos = await db
@@ -33,12 +33,7 @@ export async function updateUserInfo({
   username,
   ai_api_key,
   ai_model,
-}: {
-  id: string;
-  username: string;
-  ai_api_key: string;
-  ai_model: AiModelType;
-}) {
+}: InsertUsersInfo) {
   // Only encrypt if the API key has changed
   // First get the current (encrypted) value from DB
   const currentUserInfo = await db
@@ -54,7 +49,7 @@ export async function updateUserInfo({
 
   // Only re-encrypt if the key has changed or if we need to encrypt the first time
   let finalApiKey = currentUserInfo?.ai_api_key || "";
-  if (ai_api_key !== currentDecryptedKey) {
+  if (ai_api_key && ai_api_key !== currentDecryptedKey) {
     finalApiKey = encrypt(ai_api_key);
   }
 

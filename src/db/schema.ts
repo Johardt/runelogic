@@ -1,4 +1,4 @@
-import { pgEnum, pgTable, text, uuid } from "drizzle-orm/pg-core";
+import { pgEnum, pgTable, text, uuid, timestamp } from "drizzle-orm/pg-core";
 
 export const AiModelNames = ["gpt-4o", "gpt-4o-mini"] as const;
 export const ai_model_name = pgEnum("ai_model", AiModelNames);
@@ -8,6 +8,12 @@ export const users_info = pgTable("users_info", {
   username: text("username"),
   ai_api_key: text("ai_api_key"),
   ai_model: ai_model_name("ai_model"),
+});
+
+export const user_keys = pgTable("user_keys", {
+  id: uuid("id").primaryKey(),
+  created_at: timestamp("created_at").defaultNow(),
+  key: uuid("key").defaultRandom(),
 });
 
 export type AiModelType = (typeof AiModelNames)[number];

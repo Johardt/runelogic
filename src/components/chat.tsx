@@ -1,6 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useChat } from "@ai-sdk/react";
 import { ChatInput } from "@/components/chat-input";
+import { Badge } from "@/components/ui/badge";
+import { AiModelType } from "@/db/schema";
+import { decrypt } from "@/utils/encryption";
+import { STORAGE_KEYS } from "@/utils/local-storage";
+
 
 // Define the structure for an action
 interface Action {
@@ -22,8 +27,58 @@ const availableActions: Action[] = [
 const sayActionIds = ["whisper", "say", "shout"];
 
 export default function Chat() {
+  // Get client settings
+  const [clientSettings, setClientSettings] = useState<{
+    storageType: string | null;
+    apiKey: string | null;
+    model: AiModelType | null;
+  } | null>(null);
+
+  // Load client settings on component mount
+  useEffect(() => {
+    const loadClientSettings = async () => {
+      const storageType = localStorage.getItem(STORAGE_KEYS.STORAGE_TYPE);
+      
+      if (storageType === 'client') {
+        try {
+          // Get encryption key from server
+          const keyResponse = await fetch('/api/profile/key', {
+            method: 'POST',
+          });
+          
+          if (keyResponse.ok) {
+            const { key } = await keyResponse.json();
+            
+            // Get encrypted values
+            const encryptedApiKey = localStorage.getItem(STORAGE_KEYS.API_KEY);
+            const encryptedModel = localStorage.getItem(STORAGE_KEYS.MODEL);
+            
+            // Decrypt values if they exist
+            if (encryptedApiKey) {
+              const apiKey = await decrypt(encryptedApiKey, key);
+              const model = encryptedModel ? await decrypt(encryptedModel, key) as AiModelType : null;
+              
+              setClientSettings({
+                storageType,
+                apiKey,
+                model
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Failed to load client settings:", error);
+        }
+      }
+    };
+    
+    loadClientSettings();
+  }, []);
+
   const { messages, input, handleInputChange, append, setInput } = useChat({
     api: "/api/chat",
+    body: {
+      clientSettings
+    }
   });
 
   const [selectedActionId, setSelectedActionId] = useState<string>("attempt");
@@ -53,6 +108,62 @@ export default function Chat() {
     setInput("");
   };
 
+  // Render message parts according to their type
+  const renderMessageParts = (message: any) => {
+    return (
+      <div
+        className={`whitespace-pre-wrap p-3 border rounded ${message.role === "assistant" ? "bg-gray-50" : ""}`}
+      >
+        <span className="font-bold">
+          {message.role === "user" ? "You: " : "AI: "}
+        </span>
+        {message.parts?.map((part: any, i: number) => {
+          switch (part.type) {
+            case "text":
+              return <span key={i}>{part.text}</span>;
+
+            case "tool-invocation":
+              return (
+                <div key={i} className="my-2 p-2 border rounded bg-blue-50">
+                  <Badge variant="outline" className="mb-1">
+                    Tool Used: {part.toolInvocation.toolName}
+                  </Badge>
+                  <div className="text-sm font-mono">
+                    {JSON.stringify(part.toolInvocation.input, null, 2)}
+                  </div>
+                </div>
+              );
+
+            case "tool-result":
+              return (
+                <div key={i} className="my-2 p-2 border rounded bg-green-50">
+                  <Badge variant="outline">Tool Result</Badge>
+                  <div className="font-mono text-sm mt-1">
+                    {typeof part.result === "object"
+                      ? JSON.stringify(part.result, null, 2)
+                      : String(part.result)}
+                  </div>
+                </div>
+              );
+
+            case "reasoning":
+              return (
+                <div key={i} className="my-2 p-2 border rounded bg-yellow-50">
+                  <Badge variant="outline" className="mb-1">
+                    AI Reasoning
+                  </Badge>
+                  <div className="text-sm">{part.reasoning}</div>
+                </div>
+              );
+
+            default:
+              return null;
+          }
+        })}
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col max-w-2xl w-full mx-auto p-4">
       {/* Messages container */}
@@ -63,55 +174,9 @@ export default function Chat() {
           </div>
         ) : (
           <div className="space-y-4">
-            {messages.map((m) => {
-              // For user messages, handle action prefixes for display
-              let prefixPart = "";
-              let contentPart = m.content;
-
-              if (m.role === "user") {
-                const actionPrefix = availableActions.find((action) =>
-                  m.content.startsWith(action.prefix),
-                );
-                if (actionPrefix) {
-                  prefixPart = actionPrefix.prefix + " ";
-                  contentPart = m.content.substring(actionPrefix.prefix.length);
-                } else {
-                  prefixPart = "User: ";
-                }
-
-                return (
-                  <div
-                    key={m.id}
-                    className="whitespace-pre-wrap p-3 border rounded"
-                  >
-                    <span className="font-bold">{prefixPart}</span>
-                    {contentPart}
-                  </div>
-                );
-              } else if (m.role === "assistant") {
-                // Assistant message
-                return (
-                  <div
-                    key={m.id}
-                    className="whitespace-pre-wrap p-3 border rounded bg-gray-50"
-                  >
-                    <span className="font-bold">AI: </span>
-                    {m.content}
-                  </div>
-                );
-              } else if (m.role === "system") {
-                // System message
-                return (
-                  <div
-                    key={m.id}
-                    className="whitespace-pre-wrap p-3 border rounded bg-gray-100"
-                  >
-                    <span className="font-bold">System: </span>
-                    {m.content}
-                  </div>
-                );
-              }
-            })}
+            {messages.map((message) => (
+              <div key={message.id}>{renderMessageParts(message)}</div>
+            ))}
           </div>
         )}
       </div>

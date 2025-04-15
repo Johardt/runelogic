@@ -1,9 +1,47 @@
-import { openai } from "@ai-sdk/openai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { streamText } from "ai";
 import { rollDiceTool } from "@/lib/tools";
+import { createClient } from "@/utils/supabase/server";
+import { selectUserInfo } from "@/app/profile/actions";
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+  const { messages, clientSettings } = await req.json();
+
+  const supabase = createClient();
+
+  const { data, error } = await (await supabase).auth.getUser();
+  if (error || !data?.user) {
+    console.log(error);
+    console.log("Something went wrong!");
+    return new NextResponse(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+  }
+
+  let apiKey: string | null = null;
+  let model: string | null = null;
+
+  // Check if client settings were passed in the request
+  if (clientSettings?.storageType === "client" && clientSettings.apiKey) {
+    // Use client-stored settings from the request
+    console.log("Using client-stored settings");
+    apiKey = clientSettings.apiKey;
+    model = clientSettings.model || "gpt-4o-mini";
+  } else {
+    // Fall back to server-stored settings
+    console.log("Using server-stored settings");
+    let userInfo = await selectUserInfo(data.user.id).then((infos) => {
+      return infos[0];
+    });
+    apiKey = userInfo.ai_api_key;
+    model = userInfo.ai_model;
+  }
+
+  if (!apiKey) {
+    return NextResponse.json(
+      { error: "No API key found. Please configure your API settings." },
+      { status: 400 }
+    );
+  }
 
   const defaultSystemPrompt = `
     You are a Dungeon Master (GM) running a game of Dungeon World.
@@ -13,7 +51,7 @@ export async function POST(req: Request) {
     You do not explain the rules to players unless they ask. Instead, use the rules to guide how events unfold. Use additional context (from the rules and setting) when available to determine outcomes.
 
     Always respond with:
-    1. Fictional description of the world reacting to the player’s action
+    1. Fictional description of the world reacting to the player's action
     2. The outcome of their move or attempted action
     3. Any consequences, dangers, or follow-up questions
 
@@ -26,25 +64,38 @@ export async function POST(req: Request) {
       - 7–9 → Mixed success, choose a drawback
       - 6- → Miss: make a hard move against the player
 
-    When a move or rule is unclear, use what makes sense narratively. Lean into danger, drama, and tension. Ask provocative questions. Show the world’s reaction. Never say "you can't do that" — instead, show what it would cost.
+    When a move or rule is unclear, use what makes sense narratively. Lean into danger, drama, and tension. Ask provocative questions. Show the world's reaction. Never say "you can't do that" — instead, show what it would cost.
 
     Speak evocatively. Describe the world in vivid, sensory terms. Keep the pacing tight. You are not an impartial referee — you are the world's voice.
 
     You have access to tools:
-    - rollDice(amount, sides): Rolls dice, e.g., "2 d6"
+    - rollDice(amount, sides): Rolls dice, e.g., "2 d6". IMPORTANT: YOU MUST roll dice yourself, the user CAN NOT do it on their own!!
 
     Use these tools to resolve actions when appropriate. Do not guess roll results or stats.
   `;
 
-  const result = streamText({
-    model: openai("gpt-4o-mini"),
-    system: defaultSystemPrompt,
-    messages,
-    tools: {
-      roll_dice: rollDiceTool,
-    },
-    maxSteps: 5,
+  const openai = createOpenAI({
+    apiKey: apiKey,
   });
 
-  return result.toDataStreamResponse();
+  try {
+    const result = streamText({
+      model: openai(model || "gpt-4o-mini"),
+      system: defaultSystemPrompt,
+      messages,
+      tools: {
+        roll_dice: rollDiceTool,
+      },
+      maxSteps: 5,
+    });
+
+    // Use the correct method and handle streaming response
+    return new Response(result.toDataStream());
+  } catch (error) {
+    console.error("Error in chat API:", error);
+    return new NextResponse(
+      JSON.stringify({ error: "Failed to process request" }),
+      { status: 500 }
+    );
+  }
 }
