@@ -34,13 +34,14 @@ export function SignupForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form action={signup}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-3">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
+                  name="email"
                   placeholder="m@example.com"
                   required
                 />
@@ -49,10 +50,10 @@ export function SignupForm({
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
                 </div>
-                <Input id="password" type="password" required />
+                <Input id="password" type="password" name="password" required />
               </div>
               <div className="flex flex-col gap-3">
-                <Button formAction={signup} className="w-full">
+                <Button type="submit" className="w-full">
                   Sign In with Email
                 </Button>
               </div>
