@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import { AuthButtons } from "@/components/auth-buttons";
+import { Badge } from "@/components/ui/badge";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,9 +34,14 @@ export default function RootLayout({
           {/* Header Bar */}
           <header className="px-6 py-4 bg-white border-b text-neutral-800 border-neutral-300">
             <div className="container flex items-center justify-between mx-auto">
-              <Link href="/" className="text-xl font-bold">
-                AI Dungeon Master
-              </Link>
+              <div className="flex items-center space-x-2 align-middle">
+                <Link href="/" className="text-xl font-bold">
+                  AI Dungeon Master
+                </Link>
+                <Badge className="inline-flex items-center align-middle bg-yellow-100 px-2 py-0.5 text-xs font-semibold text-yellow-800 border border-yellow-300">
+                  PREVIEW
+                </Badge>
+              </div>
               <nav className="space-x-4">
                 <AuthButtons />
               </nav>
