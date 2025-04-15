@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   if (error || !data?.user) {
     console.log(error);
     console.log("Something went wrong!");
-    return NextResponse.error;
+    return new NextResponse(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
 
   let apiKey: string | null = null;
@@ -78,15 +78,24 @@ export async function POST(req: Request) {
     apiKey: apiKey,
   });
 
-  const result = streamText({
-    model: openai(model || "gpt-4o-mini"),
-    system: defaultSystemPrompt,
-    messages,
-    tools: {
-      roll_dice: rollDiceTool,
-    },
-    maxSteps: 5,
-  });
+  try {
+    const result = streamText({
+      model: openai(model || "gpt-4o-mini"),
+      system: defaultSystemPrompt,
+      messages,
+      tools: {
+        roll_dice: rollDiceTool,
+      },
+      maxSteps: 5,
+    });
 
-  return result.toDataStreamResponse();
+    // Use the correct method and handle streaming response
+    return new Response(result.toDataStream());
+  } catch (error) {
+    console.error("Error in chat API:", error);
+    return new NextResponse(
+      JSON.stringify({ error: "Failed to process request" }),
+      { status: 500 }
+    );
+  }
 }
