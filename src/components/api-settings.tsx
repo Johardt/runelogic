@@ -1,11 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useReducer, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { AiModelType } from "@/db/schema";
 import { toast } from "sonner";
 import { encrypt, decrypt } from "@/utils/encryption";
@@ -13,35 +26,102 @@ import { STORAGE_KEYS } from "@/utils/local-storage";
 
 const DEFAULT_MODEL: AiModelType = "gpt-4o-mini";
 
+// Define types for the state and action
+interface SettingsState {
+  apiKey: string;
+  model: AiModelType;
+  storageType: string;
+  isSaving: boolean;
+  serverModel: AiModelType | null;
+}
+
+interface SettingsAction {
+  type: string;
+  payload?: any;
+}
+
+// Define the initial state and reducer for managing complex state
+const initialState: SettingsState = {
+  apiKey: "",
+  model: DEFAULT_MODEL,
+  storageType: "server",
+  isSaving: false,
+  serverModel: null,
+};
+
+function settingsReducer(
+  state: SettingsState,
+  action: SettingsAction,
+): SettingsState {
+  switch (action.type) {
+    case "SET_API_KEY":
+      return { ...state, apiKey: action.payload };
+    case "SET_MODEL":
+      return { ...state, model: action.payload };
+    case "SET_STORAGE_TYPE":
+      return { ...state, storageType: action.payload };
+    case "SET_IS_SAVING":
+      return { ...state, isSaving: action.payload };
+    case "SET_SERVER_MODEL":
+      return { ...state, serverModel: action.payload };
+    default:
+      return state;
+  }
+}
+
 export function ApiSettings() {
-  const [apiKey, setApiKey] = useState("");
-  const [model, setModel] = useState<AiModelType>(DEFAULT_MODEL);
-  const [storageType, setStorageType] = useState<"server" | "client">("server");
-  const [isSaving, setIsSaving] = useState(false);
-  const [serverModel, setServerModel] = useState<AiModelType | null>(null);
+  const [state, dispatch] = useReducer(settingsReducer, initialState);
+  const { apiKey, model, storageType, isSaving, serverModel } = state;
   const [isClient, setIsClient] = useState(false);
 
-  // Check localStorage after component mounts
+  const getEncryptionKey = useCallback(async (): Promise<string> => {
+    const response = await fetch("/api/profile/key", {
+      method: "POST",
+    });
+    if (!response.ok) {
+      throw new Error("Failed to get encryption key");
+    }
+    const { key } = await response.json();
+    return key;
+  }, []);
+
+  const getStorageValue = useCallback(
+    async (key: string) => {
+      const value = localStorage.getItem(key);
+      if (!value) return null;
+      try {
+        const encryptionKey = await getEncryptionKey();
+        return await decrypt(value, encryptionKey);
+      } catch {
+        return null;
+      }
+    },
+    [getEncryptionKey],
+  );
+
+  const setStorageValue = async (key: string, value: string) => {
+    const encryptionKey = await getEncryptionKey();
+    const encrypted = await encrypt(value, encryptionKey);
+    localStorage.setItem(key, encrypted);
+  };
+
   useEffect(() => {
     setIsClient(true);
     const savedStorageType = localStorage.getItem(STORAGE_KEYS.STORAGE_TYPE);
-    if (savedStorageType === 'client') {
-      setStorageType('client');
+    if (savedStorageType === "client") {
+      dispatch({ type: "SET_STORAGE_TYPE", payload: "client" });
     }
-    
-    // Make sure we sync data after storage type is set
+
     const loadSettings = async () => {
-      // Try to get server data
       try {
         const response = await fetch("/api/profile/settings");
         const data = await response.json();
         if (data.model) {
-          setServerModel(data.model);
-          // Set model and API key if we're using server storage
-          if (savedStorageType !== 'client') {
-            setModel(data.model);
+          dispatch({ type: "SET_SERVER_MODEL", payload: data.model });
+          if (savedStorageType !== "client") {
+            dispatch({ type: "SET_MODEL", payload: data.model });
             if (data.apiKey) {
-              setApiKey(data.apiKey);
+              dispatch({ type: "SET_API_KEY", payload: data.apiKey });
             }
           }
         }
@@ -49,95 +129,63 @@ export function ApiSettings() {
         console.error("Failed to fetch server settings:", error);
       }
 
-      // Check local storage if we're using client storage
-      if (savedStorageType === 'client') {
+      if (savedStorageType === "client") {
         try {
           const storedApiKey = await getStorageValue(STORAGE_KEYS.API_KEY);
-          const storedModel = await getStorageValue(STORAGE_KEYS.MODEL) as AiModelType | null;
-          
-          if (storedApiKey) setApiKey(storedApiKey);
-          if (storedModel) setModel(storedModel);
+          const storedModel = (await getStorageValue(
+            STORAGE_KEYS.MODEL,
+          )) as AiModelType | null;
+
+          if (storedApiKey)
+            dispatch({ type: "SET_API_KEY", payload: storedApiKey });
+          if (storedModel)
+            dispatch({ type: "SET_MODEL", payload: storedModel });
         } catch (error) {
           console.error("Failed to load client settings:", error);
-          // If we can't load client settings, fall back to server
-          setStorageType("server");
+          dispatch({ type: "SET_STORAGE_TYPE", payload: "server" });
           localStorage.setItem(STORAGE_KEYS.STORAGE_TYPE, "server");
           if (serverModel) {
-            setModel(serverModel);
+            dispatch({ type: "SET_MODEL", payload: serverModel });
           }
         }
       }
     };
 
     loadSettings();
-  }, []);
-
-  // Function to get the encryption key from the server
-  const getEncryptionKey = async (): Promise<string> => {
-    const response = await fetch('/api/profile/key', {
-      method: 'POST',
-    });
-    if (!response.ok) {
-      throw new Error('Failed to get encryption key');
-    }
-    const { key } = await response.json();
-    return key;
-  };
-
-  // Function to get storage value
-  const getStorageValue = async (key: string) => {
-    const value = localStorage.getItem(key);
-    if (!value) return null;
-    try {
-      const encryptionKey = await getEncryptionKey();
-      return await decrypt(value, encryptionKey);
-    } catch {
-      return null;
-    }
-  };
-
-  // Function to set storage value
-  const setStorageValue = async (key: string, value: string) => {
-    const encryptionKey = await getEncryptionKey();
-    const encrypted = await encrypt(value, encryptionKey);
-    localStorage.setItem(key, encrypted);
-  };
+  }, [getStorageValue, serverModel]);
 
   const handleStorageTypeChange = (value: "server" | "client") => {
-    setStorageType(value);
+    dispatch({ type: "SET_STORAGE_TYPE", payload: value });
     localStorage.setItem(STORAGE_KEYS.STORAGE_TYPE, value);
-    
+
     if (value === "server") {
-      // When switching to server storage, clear local storage and use server values
       localStorage.removeItem(STORAGE_KEYS.API_KEY);
       localStorage.removeItem(STORAGE_KEYS.MODEL);
       if (serverModel) {
-        setModel(serverModel);
+        dispatch({ type: "SET_MODEL", payload: serverModel });
       }
     }
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSaving(true);
+    dispatch({ type: "SET_IS_SAVING", payload: true });
     try {
       if (storageType === "client") {
-        // Save encrypted data to local storage
         await setStorageValue(STORAGE_KEYS.API_KEY, apiKey);
         await setStorageValue(STORAGE_KEYS.MODEL, model);
         localStorage.setItem(STORAGE_KEYS.STORAGE_TYPE, "client");
-        
+
         toast.success("Settings saved to your device");
       } else {
-        // Save to server and clear any existing local storage
         localStorage.removeItem(STORAGE_KEYS.API_KEY);
         localStorage.removeItem(STORAGE_KEYS.MODEL);
         localStorage.setItem(STORAGE_KEYS.STORAGE_TYPE, "server");
-        
+
         const formData = new FormData();
         formData.append("ai_api_key", apiKey);
         formData.append("ai_model", model);
-        
+
         const response = await fetch("/api/profile/settings", {
           method: "POST",
           body: formData,
@@ -148,14 +196,16 @@ export function ApiSettings() {
           throw new Error(error.error || "Failed to save settings");
         }
 
-        setServerModel(model);
+        dispatch({ type: "SET_SERVER_MODEL", payload: model });
         toast.success("Settings saved to server");
       }
     } catch (error) {
       console.error("Save error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to save settings");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to save settings",
+      );
     } finally {
-      setIsSaving(false);
+      dispatch({ type: "SET_IS_SAVING", payload: false });
     }
   };
 
@@ -164,7 +214,8 @@ export function ApiSettings() {
       <CardHeader>
         <CardTitle>AI API Settings</CardTitle>
         <CardDescription>
-          Configure your AI API settings. You can choose to store these settings on your device or on our servers.
+          Configure your AI API settings. You can choose to store these settings
+          on your device or on our servers.
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSave}>
@@ -180,7 +231,9 @@ export function ApiSettings() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="server">Store on Server (Recommended)</SelectItem>
+                  <SelectItem value="server">
+                    Store on Server (Recommended)
+                  </SelectItem>
                   <SelectItem value="client">Store on My Device</SelectItem>
                 </SelectContent>
               </Select>
@@ -202,32 +255,43 @@ export function ApiSettings() {
               id="api_key"
               type="password"
               value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
+              onChange={(e) =>
+                dispatch({ type: "SET_API_KEY", payload: e.target.value })
+              }
               placeholder="Enter your API key"
             />
             <p className="text-xs text-muted-foreground">
-              Your API key is used to interact with AI services. Currently, only OpenAI API keys are supported.
+              Your API key is used to interact with AI services. Currently, only
+              OpenAI API keys are supported.
             </p>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="model">Default AI Model</Label>
-            <Select 
-              value={model} 
-              onValueChange={(value: AiModelType) => setModel(value)}
+            <Select
+              value={model}
+              onValueChange={(value: AiModelType) =>
+                dispatch({ type: "SET_MODEL", payload: value })
+              }
               defaultValue={DEFAULT_MODEL}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select AI model" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="gpt-4o" className="flex flex-col items-start">
+                <SelectItem
+                  value="gpt-4o"
+                  className="flex flex-col items-start"
+                >
                   <span>GPT-4o</span>
                   <span className="text-xs text-muted-foreground">
                     Most capable model, provides detailed narratives
                   </span>
                 </SelectItem>
-                <SelectItem value="gpt-4o-mini" className="flex flex-col items-start">
+                <SelectItem
+                  value="gpt-4o-mini"
+                  className="flex flex-col items-start"
+                >
                   <span>GPT-4o mini</span>
                   <span className="text-xs text-muted-foreground">
                     Faster responses, more economical
@@ -236,12 +300,17 @@ export function ApiSettings() {
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              Choose which AI model powers your adventures. You can override this model setting for each adventure.
+              Choose which AI model powers your adventures. You can override
+              this model setting for each adventure.
             </p>
           </div>
 
           <CardFooter className="px-0 flex justify-end">
-            <Button type="submit" disabled={isSaving} className="px-8 cursor-pointer">
+            <Button
+              type="submit"
+              disabled={isSaving}
+              className="px-8 cursor-pointer"
+            >
               {isSaving ? "Saving..." : "Save Changes"}
             </Button>
           </CardFooter>
@@ -249,4 +318,4 @@ export function ApiSettings() {
       </form>
     </Card>
   );
-} 
+}
