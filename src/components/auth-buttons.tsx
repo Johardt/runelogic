@@ -50,7 +50,7 @@ export async function AuthButtons() {
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link
-                href="/auth/logout"
+                href="/logout"
                 className="flex items-center px-3 py-2 rounded hover:bg-gray-100"
               >
                 <LogOut color="black" />
