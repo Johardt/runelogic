@@ -42,7 +42,7 @@ export function ConversationCard({
   };
 
   return (
-    <Link href={`/game/${id}`} key={id}>
+    <Link href={`/adventures/${id}`} key={id}>
       <Card className="hover:shadow-md transition relative h-72">
         <CardHeader className="flex flex-row items-start justify-between space-y-0">
           <CardTitle>{title || "Untitled Adventure"}</CardTitle>

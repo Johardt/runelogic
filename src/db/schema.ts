@@ -1,4 +1,4 @@
-import { pgEnum, pgTable, text, uuid, timestamp } from "drizzle-orm/pg-core";
+import { pgEnum, pgTable, text, uuid, timestamp, serial, jsonb } from "drizzle-orm/pg-core";
 
 export const AiModelNames = [
   "gpt-4o",
@@ -54,7 +54,22 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
+export const classes = pgTable("classes", {
+  id: serial(),
+  className: text("class_name").notNull(),
+  raceOptions: jsonb("race_options"),
+  nameOptions: jsonb("name_options"),
+  lookOptions: jsonb("look_options"),
+  stats: jsonb("stats"),
+  alignmentOptions: jsonb("alignment_options"),
+  gearOptions: jsonb("gear_options"),
+  bonds: jsonb("bonds"),
+  startingMoves: jsonb("starting_moves"),
+  advancedMoved: jsonb("advanced_moves"),
+  expertMoves: jsonb("expert_moves"),
+  description: text("description")
+});
+
 export type AiModelType = (typeof AiModelNames)[number];
 export type InsertUsersInfo = typeof users_info.$inferInsert;
 export type SelectUsersInfo = typeof users_info.$inferSelect;
-export type SelectMessageType = typeof messages.$inferSelect;

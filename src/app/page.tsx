@@ -39,7 +39,7 @@ export default async function Home() {
       })
       .returning();
 
-    redirect(`/game/${newConvo.id}`);
+    redirect(`/adventures/${newConvo.id}`);
   }
 
   return (
