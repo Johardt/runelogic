@@ -268,7 +268,7 @@ export function ApiSettings() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="model">Default AI Model</Label>
+            <Label>Default AI Model</Label>
             <Select
               value={model}
               onValueChange={(value: AiModelType) =>

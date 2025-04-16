@@ -1,4 +1,12 @@
-import { pgEnum, pgTable, text, uuid, timestamp, serial, jsonb } from "drizzle-orm/pg-core";
+import {
+  pgEnum,
+  pgTable,
+  text,
+  uuid,
+  timestamp,
+  serial,
+  jsonb,
+} from "drizzle-orm/pg-core";
 
 export const AiModelNames = [
   "gpt-4o",
@@ -67,7 +75,13 @@ export const classes = pgTable("classes", {
   startingMoves: jsonb("starting_moves"),
   advancedMoved: jsonb("advanced_moves"),
   expertMoves: jsonb("expert_moves"),
-  description: text("description")
+  description: text("description"),
+});
+
+export const characters = pgTable("characters", {
+  characterId: uuid("character_id").primaryKey().defaultRandom(),
+  userId: uuid("user_id"),
+  characterSheet: jsonb("character_sheet"),
 });
 
 export type AiModelType = (typeof AiModelNames)[number];
