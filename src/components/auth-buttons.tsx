@@ -23,6 +23,10 @@ export async function AuthButtons() {
   } else {
     return (
       <div className="flex flex-row items-center space-x-4">
+        <Link href="/characters" className="flex items-center">
+          My Characters
+        </Link>
+        <p>|</p>
         <Link href="/user/inbox" className="flex items-center">
           <Mail color="text-neutral-800" size={28} />
         </Link>

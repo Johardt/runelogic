@@ -23,30 +23,13 @@ export default async function Home() {
     .orderBy(desc(conversations.createdAt)) // descending order
     .limit(5);
 
-  async function startNewGame() {
-    "use server";
-
-    const { user } = await getUser();
-    if (!user) redirect("/login");
-
-    const [newConvo] = await db
-      .insert(conversations)
-      .values({
-        userId: user.id,
-        title: "Untitled Adventure",
-      })
-      .returning();
-
-    redirect(`/adventures/${newConvo.id}`);
-  }
-
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
-      <form action={startNewGame}>
+      <Link href="/adventures/new">
         <Button size="lg" className="w-full text-xl py-6 cursor-pointer">
-          ➕ Start New Game
+          ➕ Start New Adventure
         </Button>
-      </form>
+      </Link>
 
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">Recent Adventures</h2>

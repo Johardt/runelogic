@@ -50,6 +50,7 @@ export const conversations = pgTable("conversations", {
   title: text("title"),
   summary: text("summary"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  characterId: uuid("character_id").references(() => characters.characterId),
 });
 
 export const messages = pgTable("messages", {

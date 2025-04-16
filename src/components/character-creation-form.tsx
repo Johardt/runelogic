@@ -13,6 +13,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CollapsibleCard } from "./ui/collapsible-card";
 import { Button } from "./ui/button";
 import { createClient } from "@/utils/supabase/client";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export interface CharacterClass {
   id: number;
@@ -70,8 +72,13 @@ export function CharacterCreationForm({ classes }: CharacterCreationFormProps) {
     Object.keys(look).length ===
       Object.keys(selectedClass?.lookOptions || {}).length;
 
+  const router = useRouter();
+
   const handleSubmit = async () => {
-    if (!isComplete) return alert("Please complete all required fields.");
+    if (!isComplete) {
+      toast.error("Please complete all required fields.");
+      return;
+    }
 
     const characterData = {
       className: selectedClassName,
@@ -88,7 +95,7 @@ export function CharacterCreationForm({ classes }: CharacterCreationFormProps) {
     const supabase = createClient();
     const { data, error } = await supabase.auth.getUser();
     if (error || !data?.user) {
-      console.log(error);
+      toast.error("Authentication error.");
       return;
     }
 
@@ -106,12 +113,11 @@ export function CharacterCreationForm({ classes }: CharacterCreationFormProps) {
 
       if (!res.ok) throw new Error("Failed to create character");
 
-      const response = await res.json();
-      console.log("Character created:", response);
-      alert("Character created successfully!");
+      toast.success("Character created successfully!");
+      router.push("/characters");
     } catch (err) {
       console.error("Submission error:", err);
-      alert("Something went wrong.");
+      toast.error("Something went wrong.");
     }
   };
 

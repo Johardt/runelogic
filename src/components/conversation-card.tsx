@@ -37,7 +37,7 @@ export function ConversationCard({
       toast.success("Adventure deleted");
       router.refresh(); // refresh current page
     } else {
-      toast.error("Failed to delete conversation");
+      toast.error("Failed to delete adventure");
     }
   };
 
@@ -48,12 +48,15 @@ export function ConversationCard({
           <CardTitle>{title || "Untitled Adventure"}</CardTitle>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="p-1 text-muted-foreground hover:text-foreground">
+              <button className="p-1 text-muted-foreground hover:text-foreground cursor-pointer">
                 <MoreVertical className="w-5 h-5" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+              <DropdownMenuItem
+                onClick={handleDelete}
+                className="text-red-600 cursor-pointer"
+              >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete
               </DropdownMenuItem>
