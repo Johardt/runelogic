@@ -50,10 +50,14 @@ export function LoginForm({
                 <Input id="password" type="password" name="password" required />
               </div>
               <div className="flex flex-col gap-3">
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full cursor-pointer">
                   Login
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button
+                  variant="outline"
+                  className="w-full cursor-not-allowed"
+                  disabled={true}
+                >
                   Login with Google
                 </Button>
               </div>
