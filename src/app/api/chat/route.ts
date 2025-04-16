@@ -1,17 +1,15 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { streamText } from "ai";
 import { rollDiceTool } from "@/lib/tools";
-import { createClient } from "@/utils/supabase/server";
+import { getUser } from "@/utils/supabase/server";
 import { selectUserInfo } from "@/app/profile/actions";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   const { messages, clientSettings } = await req.json();
 
-  const supabase = createClient();
-
-  const { data, error } = await (await supabase).auth.getUser();
-  if (error || !data?.user) {
+  const { error, user } = await getUser();
+  if (error || !user) {
     console.log(error);
     console.log("Something went wrong!");
     return new NextResponse(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
@@ -29,7 +27,7 @@ export async function POST(req: Request) {
   } else {
     // Fall back to server-stored settings
     console.log("Using server-stored settings");
-    let userInfo = await selectUserInfo(data.user.id).then((infos) => {
+    let userInfo = await selectUserInfo(user.id).then((infos) => {
       return infos[0];
     });
     apiKey = userInfo.ai_api_key;

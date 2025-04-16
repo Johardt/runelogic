@@ -1,12 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
+import { AuthError, User } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 export async function createClient() {
   const cookieStore = await cookies();
 
   return createServerClient(
-    process.env.PUBLIC_SUPABASE_URL!,
-    process.env.PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
@@ -26,4 +27,18 @@ export async function createClient() {
       },
     },
   );
+}
+
+export async function getUser(): Promise<{
+  user: User | null;
+  error: AuthError | null;
+}> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data?.user) {
+    return { user: null, error };
+  }
+
+  return { user: data.user, error: null };
 }

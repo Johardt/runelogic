@@ -23,6 +23,7 @@ import { AiModelType } from "@/db/schema";
 import { toast } from "sonner";
 import { encrypt, decrypt } from "@/utils/encryption";
 import { STORAGE_KEYS } from "@/utils/local-storage";
+import { AiModelDescriptions } from "@/db/schema";
 
 const DEFAULT_MODEL: AiModelType = "gpt-4o-mini";
 
@@ -267,7 +268,7 @@ export function ApiSettings() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="model">Default AI Model</Label>
+            <Label>Default AI Model</Label>
             <Select
               value={model}
               onValueChange={(value: AiModelType) =>
@@ -279,24 +280,20 @@ export function ApiSettings() {
                 <SelectValue placeholder="Select AI model" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  value="gpt-4o"
-                  className="flex flex-col items-start"
-                >
-                  <span>GPT-4o</span>
-                  <span className="text-xs text-muted-foreground">
-                    Most capable model, provides detailed narratives
-                  </span>
-                </SelectItem>
-                <SelectItem
-                  value="gpt-4o-mini"
-                  className="flex flex-col items-start"
-                >
-                  <span>GPT-4o mini</span>
-                  <span className="text-xs text-muted-foreground">
-                    Faster responses, more economical
-                  </span>
-                </SelectItem>
+                {Object.entries(AiModelDescriptions).map(([name, description]) => (
+                  <SelectItem
+                    key={name}
+                    value={name}
+                    className="flex flex-col items-start"
+                  >
+                    <span>{name}</span>
+                    {description && (
+                      <span className="text-xs text-muted-foreground">
+                        {description}
+                      </span>
+                    )}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">

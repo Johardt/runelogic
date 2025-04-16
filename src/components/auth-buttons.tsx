@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { getUser } from "@/utils/supabase/server";
 import { User, LogOut, Mail } from "@geist-ui/icons";
 
 import Link from "next/link";
@@ -8,10 +8,8 @@ import { DropdownMenu, DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 import { DropdownMenuContent, DropdownMenuTrigger } from "./ui/dropdown-menu";
 
 export async function AuthButtons() {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data?.user) {
+  const { error, user } = await getUser();
+  if (error || !user) {
     return (
       <div className="flex-row">
         <Link href="/login" className="mx-5 text-neutral-800">
@@ -25,6 +23,10 @@ export async function AuthButtons() {
   } else {
     return (
       <div className="flex flex-row items-center space-x-4">
+        <Link href="/characters" className="flex items-center">
+          My Characters
+        </Link>
+        <p>|</p>
         <Link href="/user/inbox" className="flex items-center">
           <Mail color="text-neutral-800" size={28} />
         </Link>

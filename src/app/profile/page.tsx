@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/utils/supabase/server";
+import { getUser } from "@/utils/supabase/server";
 import { selectUserInfo, insertUserInfo, updateUserInfo } from "./actions";
 import { Input } from "@/components/ui/input";
 import {
@@ -17,18 +17,16 @@ import { ApiSettings } from "@/components/api-settings";
 import { AiModelType } from "@/db/schema";
 
 export default async function PrivatePage() {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data?.user) {
+  const { error, user } = await getUser();
+  if (error || !user) {
     redirect("/login");
   }
 
-  let userInfos = await selectUserInfo(data.user.id);
+  let userInfos = await selectUserInfo(user.id);
 
   if (userInfos.length === 0) {
     console.log("No user info object found. Creating new");
-    userInfos = await insertUserInfo(data.user.id);
+    userInfos = await insertUserInfo(user.id);
   }
 
   const userInfo = userInfos[0];

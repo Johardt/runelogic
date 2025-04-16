@@ -1,14 +1,12 @@
-import { createClient } from "@/utils/supabase/server";
+import { getUser } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { user_keys } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function POST(req: Request) {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data?.user) {
+  const { error, user } = await getUser();
+  if (error || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -17,7 +15,7 @@ export async function POST(req: Request) {
     const existingKeys = await db
       .select()
       .from(user_keys)
-      .where(eq(user_keys.id, data.user.id));
+      .where(eq(user_keys.id, user.id));
 
     if (existingKeys.length > 0) {
       // Return the existing key
@@ -27,7 +25,7 @@ export async function POST(req: Request) {
     // If no key exists, create a new one
     const [newKey] = await db.insert(user_keys)
       .values({
-        id: data.user.id,
+        id: user.id,
       })
       .returning();
 
