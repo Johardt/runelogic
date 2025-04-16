@@ -1,14 +1,13 @@
 import { db } from "@/db";
 import { conversations } from "@/db/schema";
-import { createClient } from "@/utils/supabase/server";
+import { getUser } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 
 export async function POST(req: Request) {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
+  const { error, user } = await getUser();
 
-  if (error || !data?.user) {
+  if (error || !user) {
     return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
     });
@@ -26,7 +25,7 @@ export async function POST(req: Request) {
   const [conversation] = await db
     .insert(conversations)
     .values({
-      userId: data.user.id,
+      userId: user.id,
       title,
     })
     .returning();
@@ -35,16 +34,15 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
+  const { error, user } = await getUser();
 
-  if (error || !data?.user) {
+  if (error || !user) {
     return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
     });
   }
 
-  const userId = data.user.id;
+  const userId = user.id;
 
   const result = await db
     .select()
@@ -56,10 +54,9 @@ export async function GET() {
 }
 
 export async function DELETE(req: Request) {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
+  const { error, user } = await getUser();
 
-  if (error || !data?.user) {
+  if (error || !user) {
     return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
     });
@@ -77,7 +74,7 @@ export async function DELETE(req: Request) {
   await db
     .delete(conversations)
     .where(
-      and(eq(conversations.id, id), eq(conversations.userId, data.user.id)),
+      and(eq(conversations.id, id), eq(conversations.userId, user.id)),
     );
 
   return new NextResponse(null, { status: 204 });

@@ -2,20 +2,19 @@ import { Button } from "@/components/ui/button";
 import { db } from "@/db";
 import { conversations } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { createClient } from "@/utils/supabase/server";
+import { getUser } from "@/utils/supabase/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ConversationCard } from "@/components/conversation-card";
 
 export default async function Home() {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
+  const { error, user } = await getUser();
 
-  if (error || !data?.user) {
+  if (error || !user) {
     redirect("/login");
   }
 
-  const userId = data.user.id;
+  const userId = user.id;
 
   const recentConversations = await db
     .select()
@@ -27,14 +26,13 @@ export default async function Home() {
   async function startNewGame() {
     "use server";
 
-    const supabase = await createClient();
-    const { data } = await supabase.auth.getUser();
-    if (!data?.user) redirect("/login");
+    const { user } = await getUser();
+    if (!user) redirect("/login");
 
     const [newConvo] = await db
       .insert(conversations)
       .values({
-        userId: data.user.id,
+        userId: user.id,
         title: "Untitled Adventure",
       })
       .returning();

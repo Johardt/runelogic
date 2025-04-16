@@ -1,18 +1,16 @@
-import { createClient } from "@/utils/supabase/server";
+import { getUser } from "@/utils/supabase/server";
 import { updateUserInfo, selectUserInfo } from "@/app/profile/actions";
 import { NextResponse } from "next/server";
 import { AiModelType } from "@/db/schema";
 
 export async function GET(req: Request) {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data?.user) {
+  const { error, user } = await getUser();
+  if (error || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const userInfos = await selectUserInfo(data.user.id);
+    const userInfos = await selectUserInfo(user.id);
     if (userInfos.length === 0) {
       return NextResponse.json({ model: null });
     }
@@ -32,10 +30,8 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   console.log("Received settings update request");
-  const supabase = await createClient();
-
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data?.user) {
+  const { error, user } = await getUser();
+  if (error || !user) {
     console.log("Auth error:", error);
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -44,13 +40,13 @@ export async function POST(req: Request) {
   const aiApiKey = formData.get("ai_api_key") as string;
   const aiModel = formData.get("ai_model") as AiModelType;
 
-  console.log("Updating settings for user:", data.user.id);
+  console.log("Updating settings for user:", user.id);
   console.log("API Key:", aiApiKey ? "***" : "empty");
   console.log("Model:", aiModel);
 
   try {
     await updateUserInfo({
-      id: data.user.id,
+      id: user.id,
       username: undefined,
       ai_api_key: aiApiKey,
       ai_model: aiModel,

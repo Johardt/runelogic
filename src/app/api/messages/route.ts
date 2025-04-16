@@ -1,15 +1,14 @@
 // app/api/messages/route.ts (or similar)
 import { db } from "@/db";
 import { conversations, messages } from "@/db/schema";
-import { createClient } from "@/utils/supabase/server";
+import { getUser } from "@/utils/supabase/server";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
+  const { error, user } = await getUser();
 
-  if (error || !data?.user) {
+  if (error || !user) {
     return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
     });
@@ -31,7 +30,7 @@ export async function POST(req: Request) {
     .where(
       and(
         eq(conversations.id, conversationId),
-        eq(conversations.userId, data.user.id),
+        eq(conversations.userId, user.id),
       ),
     )
     .limit(1);
@@ -54,10 +53,9 @@ export async function POST(req: Request) {
 
 // Returns ALL messages belonging to the conversationId from the query
 export async function GET(req: Request) {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
+  const { error, user } = await getUser();
 
-  if (error || !data?.user) {
+  if (error || !user) {
     console.error(error);
     return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
@@ -81,7 +79,7 @@ export async function GET(req: Request) {
     .where(
       and(
         eq(conversations.id, conversationId),
-        eq(conversations.userId, data.user.id),
+        eq(conversations.userId, user.id),
       ),
     )
     .limit(1);
@@ -103,10 +101,9 @@ export async function GET(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
+  const { error, user } = await getUser();
 
-  if (error || !data?.user) {
+  if (error || !user) {
     return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
     });
@@ -139,7 +136,7 @@ export async function DELETE(req: Request) {
     });
   }
 
-  if (messageWithConvo.userId !== data.user.id) {
+  if (messageWithConvo.userId !== user.id) {
     return new NextResponse(JSON.stringify({ error: "Forbidden" }), {
       status: 403,
     });
