@@ -13,6 +13,7 @@ export const AiModelNames = [
   "gpt-4o-mini",
   "gpt-4.1",
   "gpt-4.1-mini",
+  "o4-mini",
 ] as const;
 
 // TODO put these in the db!
@@ -21,13 +22,15 @@ export const AiModelDescriptions: Record<
   string
 > = {
   "gpt-4o":
-    "Best for immersive storytelling and complex world-building as your Dungeon Master.",
+    "Good ol' 4o. A bit expensive, but reliable",
   "gpt-4o-mini":
-    "Great for fast-paced sessions, offering quick and creative responses for your RPG adventures.",
+    "The cheapest but also least powerful model in this list.",
   "gpt-4.1":
-    "Balanced choice for detailed narratives and engaging character interactions in Dungeon World.",
+    "The new 4o: Cheaper and more powerful, with bigger context size.",
   "gpt-4.1-mini":
-    "Ideal for lightweight, responsive gameplay and rapid scene progression.",
+    "Recommended default choice: Decently powerful, very cheap.",
+  "o4-mini":
+    "(Does not work currently!) Small, but powerful reasoning model."
 };
 export const ai_model_name = pgEnum("ai_model", AiModelNames);
 

@@ -32,7 +32,7 @@ export async function preprocessInput(
 ): Promise<PreprocessedInput> {
   try {
     const { object } = await generateObject({
-      model: openai(model),
+      model: openai("gpt-4.1-mini"), // Cheaper model for preprocessing
       schema: preprocessSchema,
       temperature: 0.2,
       system: `
@@ -56,6 +56,7 @@ Your task is to classify the input into four fields:
 - If the player attempts to use spells, check the character sheets to see if they can cast them
 - Discoveries (like "I find a chest of gold") are only valid if the fiction has already suggested their possibility.
 - Use common sense. Players often try to skip steps — don't let them.
+- Rolls are not always necessary. Striking an immovable target, lifting something that does not require a lo of strength - don't roll for everything.
 
 Your job is to protect the game’s fictional integrity and ensure the GM (the main AI) retains narrative control.
 Do not be overly generous. When in doubt, mark as invalid and let the main agent clarify.

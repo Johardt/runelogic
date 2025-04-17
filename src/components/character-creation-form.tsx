@@ -54,6 +54,7 @@ export function CharacterCreationForm({ classes }: CharacterCreationFormProps) {
     "Charisma",
   ];
   const statPool = [16, 15, 13, 12, 9, 8];
+  const mods = ["+2", "+1", "+1", "+0", "+0", "-1"];
 
   const calculateHP = () => {
     const con = assignedStats["Constitution"] ?? 0;
@@ -262,7 +263,7 @@ export function CharacterCreationForm({ classes }: CharacterCreationFormProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">—</SelectItem>
-                  {statPool.map((val) => (
+                  {statPool.map((val, index) => (
                     <SelectItem
                       key={val}
                       value={val.toString()}
@@ -271,7 +272,10 @@ export function CharacterCreationForm({ classes }: CharacterCreationFormProps) {
                         assignedStats[stat] !== val
                       }
                     >
-                      {val}
+                      {val}{" "}
+                      <p className="text-sm text-muted-foreground">
+                        ({mods[index]})
+                      </p>
                     </SelectItem>
                   ))}
                 </SelectContent>
