@@ -1,5 +1,4 @@
 import {
-  pgEnum,
   pgTable,
   text,
   uuid,
@@ -11,6 +10,7 @@ import {
 export const models = pgTable("models", {
   modelName: text("model_name").primaryKey(),
   description: text("description"),
+  vendor: text("vendor"),
 });
 
 export const users_info = pgTable("users_info", {
@@ -73,6 +73,6 @@ export type InsertUsersInfo = typeof users_info.$inferInsert;
 export type SelectModelsType = typeof models.$inferSelect;
 export type SelectUsersInfo = typeof users_info.$inferSelect;
 
-export type AiModelType = typeof models.$inferSelect["modelName"];
+export type AiModelType = (typeof models.$inferSelect)["modelName"];
 
 export const AiModelDescriptions: Record<string, string> = {};
