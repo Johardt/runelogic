@@ -6,6 +6,7 @@ import { getUser } from "@/utils/supabase/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ConversationCard } from "@/components/conversation-card";
+import { Play } from "lucide-react";
 
 export default async function Home() {
   const { error, user } = await getUser();
@@ -25,9 +26,12 @@ export default async function Home() {
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
-      <Link href="/adventures/new">
-        <Button size="lg" className="w-full text-xl py-6 cursor-pointer">
-          ➕ Start New Adventure
+      <Link href="/adventures/new" passHref>
+        <Button
+          size="lg"
+          className="w-full text-lg md:text-xl py-4 md:py-6 mb-6 md:mb-8 flex items-center gap-2 cursor-pointer"
+        >
+          <Play className="w-5 h-5" /> Start new Adventure
         </Button>
       </Link>
 

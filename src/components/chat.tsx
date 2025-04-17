@@ -1,25 +1,9 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useChat } from "@ai-sdk/react";
 import { ChatInput } from "@/components/chat-input";
 import { AiModelType } from "@/db/schema";
 import { decrypt } from "@/utils/encryption";
 import { STORAGE_KEYS } from "@/utils/local-storage";
-
-interface Action {
-  id: string;
-  uiName: string;
-  prefix: string;
-}
-
-const availableActions: Action[] = [
-  { id: "attempt", uiName: "Attempt", prefix: "You attempt to" },
-  { id: "plan", uiName: "Plan", prefix: "You plan to" },
-  { id: "whisper", uiName: "Whisper", prefix: "You whisper" },
-  { id: "say", uiName: "Say", prefix: "You say" },
-  { id: "shout", uiName: "Shout", prefix: "You shout" },
-];
-
-const sayActionIds = ["whisper", "say", "shout"];
 
 interface ChatProps {
   conversationId: string;
@@ -31,15 +15,6 @@ export default function Chat({ conversationId }: ChatProps) {
     apiKey: string | null;
     model: AiModelType | null;
   } | null>(null);
-
-  const [selectedActionId, setSelectedActionId] = useState<string>("attempt");
-
-  const selectedAction = useMemo(() => {
-    return (
-      availableActions.find((action) => action.id === selectedActionId) ||
-      availableActions[0]
-    );
-  }, [selectedActionId]);
 
   const { messages, input, handleInputChange, append, setMessages, setInput } =
     useChat({
@@ -57,6 +32,22 @@ export default function Chat({ conversationId }: ChatProps) {
         });
       },
     });
+
+  
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Function to scroll to bottom
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollTo({
+      top: messagesEndRef.current.scrollHeight,
+      behavior: "smooth", 
+    });
+  };
+
+  // Scroll to bottom whenever messages update
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   // Load past messages on mount
   useEffect(() => {
@@ -103,11 +94,9 @@ export default function Chat({ conversationId }: ChatProps) {
     event.preventDefault();
     if (!input.trim()) return;
 
-    const messageContent = `${selectedAction.prefix} ${input}`;
-
     const userMessage = {
       role: "user" as const,
-      content: messageContent,
+      content: input,
     };
 
     // Save user message
@@ -116,7 +105,7 @@ export default function Chat({ conversationId }: ChatProps) {
       body: JSON.stringify({
         conversationId,
         role: "user",
-        content: messageContent,
+        content: input,
       }),
     });
 
@@ -145,30 +134,28 @@ export default function Chat({ conversationId }: ChatProps) {
   );
 
   return (
-    <div className="flex flex-col max-w-2xl w-full mx-auto p-4">
-      <div className="mb-16">
-        {messages.length === 0 ? (
-          <div className="py-8 text-center text-gray-500">
-            Your adventure begins here...
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {messages.map((message) => (
+    <div className="flex flex-col h-full max-w-2xl w-full mx-auto pb-16">
+      <div ref={messagesEndRef} className="flex-1 overflow-y-auto">
+        <div className="p-4 space-y-4">
+          {messages.length === 0 ? (
+            <div className="py-8 text-center text-gray-500">
+              Your adventure begins here...
+            </div>
+          ) : (
+            messages.map((message) => (
               <div key={message.id}>{renderMessageParts(message)}</div>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
       </div>
 
-      <ChatInput
-        input={input}
-        handleInputChange={handleInputChange}
-        handleSubmit={handleSubmit}
-        selectedAction={selectedAction}
-        setSelectedActionId={setSelectedActionId}
-        availableActions={availableActions}
-        sayActionIds={sayActionIds}
-      />
+      <div className="p-4 border-neutral-300">
+        <ChatInput
+          input={input}
+          handleInputChange={handleInputChange}
+          handleSubmit={handleSubmit}
+        />
+      </div>
     </div>
   );
 }

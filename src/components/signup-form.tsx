@@ -53,7 +53,7 @@ export function SignupForm({
                 <Input id="password" type="password" name="password" required />
               </div>
               <div className="flex flex-col gap-3">
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full cursor-pointer">
                   Sign In with Email
                 </Button>
               </div>
@@ -68,27 +68,9 @@ export function SignupForm({
             </div>
           </div>
 
-          <Button variant="outline" className="w-full">
-            Google
+          <Button variant="outline" className="w-full" disabled={true}>
+            Google (currently disabled)
           </Button>
-
-          <p className="px-8 my-4 text-sm text-center text-muted-foreground">
-            By clicking continue, you agree to our{" "}
-            <Link
-              href="/terms"
-              className="underline underline-offset-4 hover:text-primary"
-            >
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link
-              href="/privacy"
-              className="underline underline-offset-4 hover:text-primary"
-            >
-              Privacy Policy
-            </Link>
-            .
-          </p>
         </CardContent>
       </Card>
     </div>
