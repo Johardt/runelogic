@@ -14,11 +14,11 @@ export function ChatInput({
   handleSubmit,
 }: ChatInputProps) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 p-4 bg-white">
+    <div className="fixed bottom-8 left-0 right-0 p-4">
       <div className="max-w-2xl mx-auto">
         <form
           onSubmit={handleSubmit}
-          className="flex w-full items-center space-x-2 border rounded-lg p-2"
+          className="flex w-full items-center space-x-2 border rounded-lg p-2 bg-white shadow-md"
         >
           <Input
             value={input}

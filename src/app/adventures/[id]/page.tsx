@@ -11,7 +11,9 @@ export default function GamePage({
   const { id } = use(params);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-4">
+    // Make main fill the height provided by the layout
+    <main className="h-full">
+      {/* Chat component now handles its own height and scrolling */}
       <Chat conversationId={id} />
     </main>
   );

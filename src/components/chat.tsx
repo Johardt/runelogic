@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useChat } from "@ai-sdk/react";
 import { ChatInput } from "@/components/chat-input";
 import { AiModelType } from "@/db/schema";
@@ -32,6 +32,22 @@ export default function Chat({ conversationId }: ChatProps) {
         });
       },
     });
+
+  // Ref for the scrollable messages container
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Function to scroll to bottom
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollTo({
+      top: messagesEndRef.current.scrollHeight,
+      behavior: "smooth", // Optional: smooth scrolling
+    });
+  };
+
+  // Scroll to bottom whenever messages update
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   // Load past messages on mount
   useEffect(() => {
@@ -118,26 +134,28 @@ export default function Chat({ conversationId }: ChatProps) {
   );
 
   return (
-    <div className="flex flex-col max-w-2xl w-full mx-auto p-4">
-      <div className="mb-16">
-        {messages.length === 0 ? (
-          <div className="py-8 text-center text-gray-500">
-            Your adventure begins here...
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {messages.map((message) => (
+    <div className="flex flex-col h-full max-w-2xl w-full mx-auto pb-16">
+      <div ref={messagesEndRef} className="flex-1 overflow-y-auto">
+        <div className="p-4 space-y-4">
+          {messages.length === 0 ? (
+            <div className="py-8 text-center text-gray-500">
+              Your adventure begins here...
+            </div>
+          ) : (
+            messages.map((message) => (
               <div key={message.id}>{renderMessageParts(message)}</div>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
       </div>
 
-      <ChatInput
-        input={input}
-        handleInputChange={handleInputChange}
-        handleSubmit={handleSubmit}
-      />
+      <div className="p-4 border-neutral-300">
+        <ChatInput
+          input={input}
+          handleInputChange={handleInputChange}
+          handleSubmit={handleSubmit}
+        />
+      </div>
     </div>
   );
 }
