@@ -33,14 +33,14 @@ export default function Chat({ conversationId }: ChatProps) {
       },
     });
 
-  // Ref for the scrollable messages container
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Function to scroll to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollTo({
       top: messagesEndRef.current.scrollHeight,
-      behavior: "smooth", // Optional: smooth scrolling
+      behavior: "smooth", 
     });
   };
 
