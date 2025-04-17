@@ -6,6 +6,7 @@ import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ConversationCard } from "@/components/conversation-card";
+import { ConversationCardList } from "@/components/conversation-card-list";
 
 export default async function AdventuresPage() {
   const { error, user } = await getUser();
@@ -44,14 +45,7 @@ export default async function AdventuresPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {allConversations.map((c) => (
-            <ConversationCard
-              key={c.id}
-              id={c.id}
-              title={c.title}
-              createdAt={c.createdAt}
-            />
-          ))}
+          <ConversationCardList conversations={allConversations} />
         </div>
       )}
     </div>

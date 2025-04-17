@@ -52,8 +52,8 @@ export async function POST(req: Request) {
     let userInfo = await selectUserInfo(user.id).then((infos) => {
       return infos[0];
     });
-    apiKey = userInfo.ai_api_key;
-    model = userInfo.ai_model;
+    apiKey = userInfo.openaiApiKey;
+    model = userInfo.aiModel;
   }
 
   if (!apiKey) {

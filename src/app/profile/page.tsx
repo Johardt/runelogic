@@ -39,8 +39,8 @@ export default async function PrivatePage() {
     await updateUserInfo({
       id: userInfo.id,
       username,
-      ai_api_key: userInfo.ai_api_key || "", // Handle null case
-      ai_model: (userInfo.ai_model || "gpt-4o-mini") as AiModelType, // Handle null case
+      openaiApiKey: userInfo.openaiApiKey || "", // Handle null case
+      aiModel: (userInfo.aiModel || "gpt-4o-mini") as AiModelType, // Handle null case
     });
 
     // Force a complete refresh of the page to get fresh data

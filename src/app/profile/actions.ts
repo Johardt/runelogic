@@ -12,7 +12,7 @@ export async function selectUserInfo(user_id: string) {
   return userInfos.map((user) => ({
     ...user,
     // If performance becomes an issue, consider caching decrypted values in a secure manner
-    ai_api_key: user.ai_api_key ? decrypt(user.ai_api_key) : null,
+    openaiApiKey: user.openaiApiKey ? decrypt(user.openaiApiKey) : null,
   }));
 }
 
@@ -23,43 +23,44 @@ export async function insertUserInfo(user_id: string) {
   return db.insert(users_info).values({
     id: user_id,
     username: "",
-    ai_api_key: encryptedInitialApiKey,
-    ai_model: "gpt-4o-mini",
+    openaiApiKey: encryptedInitialApiKey,
+    aiModel: "gpt-4o-mini",
   });
 }
 
 export async function updateUserInfo({
   id,
   username,
-  ai_api_key,
-  ai_model,
+  openaiApiKey,
+  aiModel,
 }: InsertUsersInfo) {
   // Only encrypt if the API key has changed
   // First get the current (encrypted) value from DB
   const currentUserInfo = await db
-    .select({ ai_api_key: users_info.ai_api_key })
+    .select({ openaiApiKey: users_info.openaiApiKey })
     .from(users_info)
     .where(eq(users_info.id, id))
     .then((results) => results[0]);
 
   // Decrypt the current API key
-  const currentDecryptedKey = currentUserInfo?.ai_api_key
-    ? decrypt(currentUserInfo.ai_api_key)
+  const currentDecryptedKey = currentUserInfo?.openaiApiKey
+    ? decrypt(currentUserInfo.openaiApiKey)
     : "";
 
   // Only re-encrypt if the key has changed or if we need to encrypt the first time
-  let finalApiKey = currentUserInfo?.ai_api_key || "";
-  if (ai_api_key && ai_api_key !== currentDecryptedKey) {
-    finalApiKey = encrypt(ai_api_key);
+  let finalApiKey = currentUserInfo?.openaiApiKey || "";
+  if (openaiApiKey && openaiApiKey !== currentDecryptedKey) {
+    finalApiKey = encrypt(openaiApiKey);
   }
+
+  const updateData: Record<string, unknown> = {};
+  if (typeof username === "string") updateData.username = username;
+  if (openaiApiKey !== undefined) updateData.openaiApiKey = finalApiKey;
+  if (aiModel !== undefined) updateData.aiModel = aiModel;
 
   return db
     .update(users_info)
-    .set({
-      username,
-      ai_api_key: finalApiKey,
-      ai_model,
-    })
+    .set(updateData)
     .where(eq(users_info.id, id))
     .returning();
 }

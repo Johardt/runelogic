@@ -8,37 +8,16 @@ import {
   jsonb,
 } from "drizzle-orm/pg-core";
 
-export const AiModelNames = [
-  "gpt-4o",
-  "gpt-4o-mini",
-  "gpt-4.1",
-  "gpt-4.1-mini",
-  "o4-mini",
-] as const;
-
-// TODO put these in the db!
-export const AiModelDescriptions: Record<
-  (typeof AiModelNames)[number],
-  string
-> = {
-  "gpt-4o":
-    "Good ol' 4o. A bit expensive, but reliable",
-  "gpt-4o-mini":
-    "The cheapest but also least powerful model in this list.",
-  "gpt-4.1":
-    "The new 4o: Cheaper and more powerful, with bigger context size.",
-  "gpt-4.1-mini":
-    "Recommended default choice: Decently powerful, very cheap.",
-  "o4-mini":
-    "(Does not work currently!) Small, but powerful reasoning model."
-};
-export const ai_model_name = pgEnum("ai_model", AiModelNames);
+export const models = pgTable("models", {
+  modelName: text("model_name").primaryKey(),
+  description: text("description"),
+});
 
 export const users_info = pgTable("users_info", {
   id: uuid("id").primaryKey(),
   username: text("username"),
-  ai_api_key: text("ai_api_key"),
-  ai_model: ai_model_name("ai_model"),
+  openaiApiKey: text("openai_api_key"),
+  aiModel: text("ai_model").references(() => models.modelName),
 });
 
 export const user_keys = pgTable("user_keys", {
@@ -54,6 +33,7 @@ export const conversations = pgTable("conversations", {
   summary: text("summary"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   characterId: uuid("character_id").references(() => characters.characterId),
+  aiModel: text("ai_model").references(() => models.modelName),
 });
 
 export const messages = pgTable("messages", {
@@ -88,6 +68,11 @@ export const characters = pgTable("characters", {
   characterSheet: jsonb("character_sheet"),
 });
 
-export type AiModelType = (typeof AiModelNames)[number];
 export type InsertUsersInfo = typeof users_info.$inferInsert;
+
+export type SelectModelsType = typeof models.$inferSelect;
 export type SelectUsersInfo = typeof users_info.$inferSelect;
+
+export type AiModelType = typeof models.$inferSelect["modelName"];
+
+export const AiModelDescriptions: Record<string, string> = {};

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ConversationCard } from "@/components/conversation-card";
 import { Play } from "lucide-react";
+import { ConversationCardList } from "@/components/conversation-card-list";
 
 export default async function Home() {
   const { error, user } = await getUser();
@@ -45,14 +46,7 @@ export default async function Home() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {recentConversations.map((c) => (
-          <ConversationCard
-            key={c.id}
-            id={c.id}
-            title={c.title}
-            createdAt={c.createdAt}
-          />
-        ))}
+        <ConversationCardList conversations={recentConversations} />
       </div>
     </div>
   );

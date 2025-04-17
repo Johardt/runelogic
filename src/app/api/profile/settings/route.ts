@@ -16,8 +16,8 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json({
-      model: userInfos[0].ai_model,
-      apiKey: userInfos[0].ai_api_key
+      model: userInfos[0].aiModel,
+      apiKey: userInfos[0].openaiApiKey
     });
   } catch (error) {
     console.error("Failed to fetch user info:", error);
@@ -37,8 +37,8 @@ export async function POST(req: Request) {
   }
 
   const formData = await req.formData();
-  const aiApiKey = formData.get("ai_api_key") as string;
-  const aiModel = formData.get("ai_model") as AiModelType;
+  const aiApiKey = formData.get("openaiApiKey") as string;
+  const aiModel = formData.get("aiModel") as AiModelType;
 
   console.log("Updating settings for user:", user.id);
   console.log("API Key:", aiApiKey ? "***" : "empty");
@@ -48,8 +48,8 @@ export async function POST(req: Request) {
     await updateUserInfo({
       id: user.id,
       username: undefined,
-      ai_api_key: aiApiKey,
-      ai_model: aiModel,
+      openaiApiKey: aiApiKey,
+      aiModel: aiModel,
     });
 
     console.log("Settings updated successfully");

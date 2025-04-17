@@ -53,51 +53,58 @@ export async function POST(req: Request) {
 
 // Returns ALL messages belonging to the conversationId from the query
 export async function GET(req: Request) {
-  const { error, user } = await getUser();
+  try {
+    const { error, user } = await getUser();
 
-  if (error || !user) {
-    console.error(error);
-    return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
+    if (error || !user) {
+      console.error(error);
+      return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+      });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const conversationId = searchParams.get("conversationId");
+
+    if (!conversationId) {
+      return new NextResponse(
+        JSON.stringify({ error: "Missing conversationId" }),
+        { status: 400 },
+      );
+    }
+
+    // Check that the conversation belongs to the user
+    const [conversation] = await db
+      .select()
+      .from(conversations)
+      .where(
+        and(
+          eq(conversations.id, conversationId),
+          eq(conversations.userId, user.id),
+        ),
+      )
+      .limit(1);
+
+    if (!conversation) {
+      return new NextResponse(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+      });
+    }
+
+    // Fetch messages for that conversation
+    const convoMessages = await db
+      .select()
+      .from(messages)
+      .where(eq(messages.conversationId, conversationId))
+      .orderBy(messages.createdAt);
+
+    return NextResponse.json(convoMessages);
+  } catch (err) {
+    console.error("/api/messages GET error:", err);
+    return new NextResponse(JSON.stringify({ error: "Internal Server Error" }), {
+      status: 500,
     });
   }
-
-  const { searchParams } = new URL(req.url);
-  const conversationId = searchParams.get("conversationId");
-
-  if (!conversationId) {
-    return new NextResponse(
-      JSON.stringify({ error: "Missing conversationId" }),
-      { status: 400 },
-    );
-  }
-
-  // Check that the conversation belongs to the user
-  const [conversation] = await db
-    .select()
-    .from(conversations)
-    .where(
-      and(
-        eq(conversations.id, conversationId),
-        eq(conversations.userId, user.id),
-      ),
-    )
-    .limit(1);
-
-  if (!conversation) {
-    return new NextResponse(JSON.stringify({ error: "Forbidden" }), {
-      status: 403,
-    });
-  }
-
-  // Fetch messages for that conversation
-  const convoMessages = await db
-    .select()
-    .from(messages)
-    .where(eq(messages.conversationId, conversationId))
-    .orderBy(messages.createdAt);
-
-  return NextResponse.json(convoMessages);
 }
 
 export async function DELETE(req: Request) {

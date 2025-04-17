@@ -19,11 +19,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AiModelType } from "@/db/schema";
+import { AiModelType, AiModelDescriptions } from "@/db/schema";
 import { toast } from "sonner";
 import { encrypt, decrypt } from "@/utils/encryption";
 import { STORAGE_KEYS } from "@/utils/local-storage";
-import { AiModelDescriptions } from "@/db/schema";
 
 const DEFAULT_MODEL: AiModelType = "gpt-4o-mini";
 
@@ -75,6 +74,8 @@ export function ApiSettings() {
   const { apiKey, model, storageType, isSaving, serverModel } = state;
   const [isClient, setIsClient] = useState(false);
 
+
+
   const getEncryptionKey = useCallback(async (): Promise<string> => {
     const response = await fetch("/api/profile/key", {
       method: "POST",
@@ -114,6 +115,21 @@ export function ApiSettings() {
     }
 
     const loadSettings = async () => {
+      try {
+        const response = await fetch("/api/models");
+        if (!response.ok) {
+          throw new Error("Failed to fetch models");
+        }
+        const models = await response.json();
+        const modelDescriptions = models.reduce((acc: any, model: any) => {
+          acc[model.modelName] = model.description;
+          return acc;
+        }, {});
+        Object.assign(AiModelDescriptions, modelDescriptions);
+      } catch (error) {
+        console.error("Failed to fetch models:", error);
+      }
+
       try {
         const response = await fetch("/api/profile/settings");
         const data = await response.json();
@@ -184,8 +200,8 @@ export function ApiSettings() {
         localStorage.setItem(STORAGE_KEYS.STORAGE_TYPE, "server");
 
         const formData = new FormData();
-        formData.append("ai_api_key", apiKey);
-        formData.append("ai_model", model);
+        formData.append("openaiApiKey", apiKey);
+        formData.append("aiModel", model);
 
         const response = await fetch("/api/profile/settings", {
           method: "POST",
@@ -251,7 +267,7 @@ export function ApiSettings() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="api_key">API Key</Label>
+            <Label htmlFor="api_key">OpenAI API Key</Label>
             <Input
               id="api_key"
               type="password"
@@ -259,11 +275,19 @@ export function ApiSettings() {
               onChange={(e) =>
                 dispatch({ type: "SET_API_KEY", payload: e.target.value })
               }
-              placeholder="Enter your API key"
+              placeholder="Enter your OpenAI API key"
             />
             <p className="text-xs text-muted-foreground">
-              Your API key is used to interact with AI services. Currently, only
-              OpenAI API keys are supported.
+              This key is used to interact with OpenAI models. If you don&apos;t have one, {" "}
+              <a
+              href="https://platform.openai.com/api-keys"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline text-primary"
+              >
+              get an API key here
+              </a>
+              .
             </p>
           </div>
 
