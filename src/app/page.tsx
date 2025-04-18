@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { db } from "@/db";
-import { conversations } from "@/db/schema";
+import { adventures } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { getUser } from "@/utils/supabase/server";
 import Link from "next/link";
@@ -20,9 +20,9 @@ export default async function Home() {
 
   const recentConversations = await db
     .select()
-    .from(conversations)
-    .where(eq(conversations.userId, userId))
-    .orderBy(desc(conversations.createdAt)) // descending order
+    .from(adventures)
+    .where(eq(adventures.userId, userId))
+    .orderBy(desc(adventures.createdAt)) // descending order
     .limit(5);
 
   return (
@@ -46,7 +46,7 @@ export default async function Home() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        <ConversationCardList conversations={recentConversations} />
+        <ConversationCardList adventures={recentConversations} />
       </div>
     </div>
   );

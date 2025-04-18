@@ -70,7 +70,7 @@ export default function Chat({ conversationId }: ChatProps) {
       const storageType = localStorage.getItem(STORAGE_KEYS.STORAGE_TYPE);
       if (storageType === "client") {
         try {
-          const res = await fetch("/api/profile/key", { method: "POST" });
+          const res = await fetch("/api/user/key", { method: "POST" });
           const { key } = await res.json();
           const encryptedApiKey = localStorage.getItem(STORAGE_KEYS.API_KEY);
           const encryptedModel = localStorage.getItem(STORAGE_KEYS.MODEL);

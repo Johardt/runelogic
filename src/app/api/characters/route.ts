@@ -1,32 +1,25 @@
+import { insertCharacterSchema } from "@/db/validators/characters";
+import { createCharacter } from "@/db/services/characters";
 import { NextResponse } from "next/server";
-import { db } from "@/db"; // adjust this to your actual db import
-import { characters } from "@/db/schema"; // the drizzle schema you provided
 
 export async function POST(req: Request) {
-  try {
-    const body = await req.json();
+  const body = await req.json();
+  const parsed = insertCharacterSchema.safeParse(body);
 
-    const { userId, character_sheet } = body;
-
-    if (!userId || !character_sheet) {
-      return NextResponse.json(
-        { error: "Missing userId or character_sheet" },
-        { status: 400 },
-      );
-    }
-
-    const [inserted] = await db
-      .insert(characters)
-      .values({
-        userId,
-        characterSheet: character_sheet,
-      })
-      .returning();
-
+  if (!parsed.success) {
     return NextResponse.json(
-      { success: true, characterId: inserted.characterId },
-      { status: 201 },
+      { error: parsed.error.flatten() },
+      { status: 400 },
     );
+  }
+
+  try {
+    const characterId = await createCharacter(
+      parsed.data.userId,
+      parsed.data.characterSheet,
+    );
+
+    return NextResponse.json({ success: true, characterId }, { status: 201 });
   } catch (err) {
     console.error("Error creating character:", err);
     return NextResponse.json(

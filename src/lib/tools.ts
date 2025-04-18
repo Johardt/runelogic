@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { eq } from "drizzle-orm";
-import { characters, conversations, messages } from "@/db/schema";
+import { characters, adventures, messages } from "@/db/schema";
 import { getUser } from "@/utils/supabase/server";
 import { z } from "zod";
 import type { CharacterSheet } from "@/types/character";
@@ -59,10 +59,10 @@ export function createFetchCharacterSheetTool(conversationId: string) {
         .select({ sheet: characters.characterSheet })
         .from(characters)
         .innerJoin(
-          conversations,
-          eq(characters.characterId, conversations.characterId),
+          adventures,
+          eq(characters.characterId, adventures.characterId),
         )
-        .where(eq(conversations.id, conversationId))
+        .where(eq(adventures.id, conversationId))
         .limit(1);
 
       if (!result || result.length === 0) {
@@ -104,10 +104,10 @@ export function createFetchStatModifierTool(conversationId: string) {
         .select({ sheet: characters.characterSheet })
         .from(characters)
         .innerJoin(
-          conversations,
-          eq(characters.characterId, conversations.characterId),
+          adventures,
+          eq(characters.characterId, adventures.characterId),
         )
-        .where(eq(conversations.id, conversationId))
+        .where(eq(adventures.id, conversationId))
         .limit(1);
 
       if (!result || result.length === 0) {

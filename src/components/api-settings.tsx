@@ -89,7 +89,7 @@ export function ApiSettings() {
   const [modelsVendorMap, setModelsVendorMap] = useState<Record<string, string>>({});
 
   const getEncryptionKey = useCallback(async (): Promise<string> => {
-    const response = await fetch("/api/profile/key", {
+    const response = await fetch("/api/user/key", {
       method: "POST",
     });
     if (!response.ok) {
@@ -149,7 +149,7 @@ export function ApiSettings() {
       }
 
       try {
-        const response = await fetch("/api/profile/settings");
+        const response = await fetch("/api/user/settings");
         const data = await response.json();
         if (data.model) {
           dispatch({ type: "SET_SERVER_MODEL", payload: data.model });
@@ -221,7 +221,7 @@ export function ApiSettings() {
         formData.append("openaiApiKey", apiKey);
         formData.append("aiModel", model);
 
-        const response = await fetch("/api/profile/settings", {
+        const response = await fetch("/api/user/settings", {
           method: "POST",
           body: formData,
         });

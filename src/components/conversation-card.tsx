@@ -41,7 +41,7 @@ export function ConversationCard({
   // Renamed function, removed event and confirm()
   const performDelete = async () => {
     try {
-      const res = await fetch(`/api/conversations?id=${id}`, {
+      const res = await fetch(`/api/adventures?id=${id}`, {
         method: "DELETE",
       });
 

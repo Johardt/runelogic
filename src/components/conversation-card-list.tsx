@@ -9,13 +9,13 @@ interface Conversation {
 }
 
 interface ConversationCardListProps {
-  conversations: Conversation[];
+  adventures: Conversation[];
 }
 
-export function ConversationCardList({ conversations }: ConversationCardListProps) {
+export function ConversationCardList({ adventures }: ConversationCardListProps) {
   return (
     <>
-      {conversations.map((c) => (
+      {adventures.map((c) => (
         <ConversationCard
           key={c.id}
           id={c.id}
