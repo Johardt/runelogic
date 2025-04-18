@@ -29,6 +29,7 @@ const DEFAULT_MODEL: AiModelType = "gpt-4o-mini";
 // Define types for the state and action
 interface SettingsState {
   apiKey: string;
+  googleApiKey: string;
   model: AiModelType;
   storageType: string;
   isSaving: boolean;
@@ -43,6 +44,7 @@ interface SettingsAction {
 // Define the initial state and reducer for managing complex state
 const initialState: SettingsState = {
   apiKey: "",
+  googleApiKey: "",
   model: DEFAULT_MODEL,
   storageType: "server",
   isSaving: false,
@@ -56,6 +58,8 @@ function settingsReducer(
   switch (action.type) {
     case "SET_API_KEY":
       return { ...state, apiKey: action.payload };
+    case "SET_GOOGLE_API_KEY":
+      return { ...state, googleApiKey: action.payload };
     case "SET_MODEL":
       return { ...state, model: action.payload };
     case "SET_STORAGE_TYPE":
@@ -71,10 +75,18 @@ function settingsReducer(
 
 export function ApiSettings() {
   const [state, dispatch] = useReducer(settingsReducer, initialState);
-  const { apiKey, model, storageType, isSaving, serverModel } = state;
+  const { apiKey, googleApiKey, model, storageType, isSaving, serverModel } = state;
   const [isClient, setIsClient] = useState(false);
 
+  // Helper to get vendor for a model name
+  const getVendorForModel = useCallback((modelName: string) => {
+    // This assumes AiModelDescriptions is populated with vendor info as value or you have a way to get vendor by modelName
+    // We'll fetch vendor info from models API response and store it in a local map
+    return modelsVendorMap[modelName];
+  }, []);
 
+  // Store vendor info for models
+  const [modelsVendorMap, setModelsVendorMap] = useState<Record<string, string>>({});
 
   const getEncryptionKey = useCallback(async (): Promise<string> => {
     const response = await fetch("/api/profile/key", {
@@ -126,6 +138,12 @@ export function ApiSettings() {
           return acc;
         }, {});
         Object.assign(AiModelDescriptions, modelDescriptions);
+        // Store vendor info
+        const vendorMap = models.reduce((acc: any, model: any) => {
+          acc[model.modelName] = model.vendor;
+          return acc;
+        }, {});
+        setModelsVendorMap(vendorMap);
       } catch (error) {
         console.error("Failed to fetch models:", error);
       }
@@ -226,6 +244,17 @@ export function ApiSettings() {
     }
   };
 
+  // Filter models for dropdown based on which API keys are set
+  const filteredModelEntries = Object.entries(AiModelDescriptions).filter(
+    ([modelName]) => {
+      const vendor = modelsVendorMap[modelName];
+      if (!apiKey && !googleApiKey) return false;
+      if (vendor === "OpenAI" && apiKey) return true;
+      if (vendor === "Google" && googleApiKey) return true;
+      return false;
+    },
+  );
+
   return (
     <Card className="shadow-lg">
       <CardHeader>
@@ -280,12 +309,37 @@ export function ApiSettings() {
             <p className="text-xs text-muted-foreground">
               This key is used to interact with OpenAI models. If you don&apos;t have one, {" "}
               <a
-              href="https://platform.openai.com/api-keys"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline text-primary"
+                href="https://platform.openai.com/api-keys"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline text-primary"
               >
-              get an API key here
+                get an API key here
+              </a>
+              .
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="google_api_key">Google AI API Key</Label>
+            <Input
+              id="google_api_key"
+              type="password"
+              value={googleApiKey}
+              onChange={(e) =>
+                dispatch({ type: "SET_GOOGLE_API_KEY", payload: e.target.value })
+              }
+              placeholder="Enter your Google AI API key"
+            />
+            <p className="text-xs text-muted-foreground">
+              This key is used to interact with Google AI models. If you don&apos;t have one, {" "}
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline text-primary"
+              >
+                get an API key here
               </a>
               .
             </p>
@@ -304,7 +358,7 @@ export function ApiSettings() {
                 <SelectValue placeholder="Select AI model" />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(AiModelDescriptions).map(([name, description]) => (
+                {filteredModelEntries.map(([name, description]) => (
                   <SelectItem
                     key={name}
                     value={name}
@@ -320,6 +374,11 @@ export function ApiSettings() {
                 ))}
               </SelectContent>
             </Select>
+            {filteredModelEntries.length === 0 && (
+              <p className="text-xs text-destructive mt-1">
+                No models available. Please enter an API key.
+              </p>
+            )}
             <p className="text-xs text-muted-foreground">
               Choose which AI model powers your adventures. You can override
               this model setting for each adventure.
