@@ -32,8 +32,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import type { characters } from "@/db/schema";
-import type { CharacterSheet } from "@/types/character";
 import React from "react";
+import { CharacterSheet } from "@/db/validators/characters";
 
 // Define the expected structure for the character prop
 interface CharacterCardProps {
@@ -46,7 +46,7 @@ export function CharacterCard({
   showStartAdventureButton = true, // Default to true
 }: CharacterCardProps) {
   const router = useRouter();
-  const sheet = character.characterSheet as CharacterSheet | null; // Type assertion
+  const sheet = character.characterSheet as CharacterSheet | null;
 
   const handleDelete = async () => {
     try {
@@ -60,7 +60,7 @@ export function CharacterCard({
       } else {
         const errorData = await res.json();
         toast.error(
-          `Failed to delete character: ${errorData.error || res.statusText}`
+          `Failed to delete character: ${errorData.error || res.statusText}`,
         );
       }
     } catch (error) {
@@ -74,7 +74,9 @@ export function CharacterCard({
     return (
       <Card className="border-destructive">
         <CardHeader>
-          <CardTitle className="text-destructive">Invalid Character Data</CardTitle>
+          <CardTitle className="text-destructive">
+            Invalid Character Data
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">

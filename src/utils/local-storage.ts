@@ -1,5 +1,5 @@
 export const STORAGE_KEYS = {
-    API_KEY: "ai_api_key",
-    MODEL: "ai_model",
+    API_KEY: "openaiApiKey",
+    MODEL: "aiModel",
     STORAGE_TYPE: "storage_type"
 };

@@ -1,46 +1,39 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
-import { characters } from "@/db/schema";
 import { getUser } from "@/utils/supabase/server";
-import { eq, and } from "drizzle-orm";
+import { deleteCharacter } from "@/db/services/characters";
+import { deleteCharacterSchema } from "@/db/validators/characters";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function DELETE(request: NextRequest) {
-  const characterId = request.nextUrl.pathname.split("/").pop(); // Extract the [id] from the path
-  if (!characterId) {
+export async function DELETE(req: NextRequest) {
+  const characterId = req.nextUrl.pathname.split("/").pop();
+
+  const parsed = deleteCharacterSchema.safeParse({ characterId });
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "Character ID is required" },
+      { error: parsed.error.flatten() },
       { status: 400 },
     );
   }
 
-  const { user, error: userError } = await getUser();
-  if (userError || !user) {
+  const { user, error: authError } = await getUser();
+  if (authError || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const deleted = await db
-      .delete(characters)
-      .where(
-        and(
-          eq(characters.characterId, characterId),
-          eq(characters.userId, user.id),
-        ),
-      )
-      .returning();
+    const result = await deleteCharacter(parsed.data.characterId, user.id);
 
-    if (deleted.length === 0) {
+    if (!result) {
       return NextResponse.json(
-        { error: "Character not found or access denied" },
+        { error: "Not found or forbidden" },
         { status: 404 },
       );
     }
 
-    return NextResponse.json({ success: true }, { status: 200 });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to delete character:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: "Internal server error" },
       { status: 500 },
     );
   }

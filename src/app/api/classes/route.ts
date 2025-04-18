@@ -1,33 +1,31 @@
-import { db } from "@/db";
-import { classes } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import { getAllClasses, getClassByName } from "@/db/services/classes";
+import { classNameQuerySchema } from "@/db/validators/classes";
 
-export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const className = url.searchParams.get("className");
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const parsed = classNameQuerySchema.safeParse({
+    className: searchParams.get("className"),
+  });
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.flatten() },
+      { status: 400 },
+    );
+  }
+
   try {
-    let result;
-    if (className) {
-      // Only return a specific character sheet
-      result = await db
-        .select()
-        .from(classes)
-        .where(eq(classes.className, className));
-    } else {
-      // Return all classes
-      result = await db.select().from(classes);
-    }
-    return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    const data = parsed.data.className
+      ? await getClassByName(parsed.data.className)
+      : await getAllClasses();
+
+    return NextResponse.json(data);
   } catch (error) {
-    return new Response(
-      JSON.stringify({
-        error: "Failed to fetch classes",
-        details: String(error),
-      }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
+    console.error("Failed to fetch class data:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch classes", details: String(error) },
+      { status: 500 },
     );
   }
 }

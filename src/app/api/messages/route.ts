@@ -1,149 +1,86 @@
-// app/api/messages/route.ts (or similar)
-import { db } from "@/db";
-import { conversations, messages } from "@/db/schema";
 import { getUser } from "@/utils/supabase/server";
-import { and, eq } from "drizzle-orm";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import {
+  createMessage,
+  deleteMessageById,
+  getMessageWithOwner,
+  getMessagesForConversation,
+  verifyUserOwnsAdventure,
+} from "@/db/services/messages";
+import {
+  insertMessageSchema,
+  getMessagesSchema,
+  deleteMessageSchema,
+} from "@/db/validators/messages";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const { error, user } = await getUser();
-
-  if (error || !user) {
-    return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-    });
-  }
+  if (error || !user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { conversationId, role, content } = body;
+  const parsed = insertMessageSchema.safeParse(body);
+  if (!parsed.success)
+    return NextResponse.json(
+      { error: parsed.error.flatten() },
+      { status: 400 },
+    );
 
-  if (!conversationId || !role || !content) {
-    return new NextResponse(JSON.stringify({ error: "Missing fields" }), {
-      status: 400,
-    });
-  }
+  const { conversationId, role, content } = parsed.data;
 
-  // Verify ownership
-  const [conversation] = await db
-    .select()
-    .from(conversations)
-    .where(
-      and(
-        eq(conversations.id, conversationId),
-        eq(conversations.userId, user.id),
-      ),
-    )
-    .limit(1);
+  const allowed = await verifyUserOwnsAdventure(conversationId, user.id);
+  if (!allowed)
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  if (!conversation) {
-    return new NextResponse(JSON.stringify({ error: "Forbidden" }), {
-      status: 403,
-    });
-  }
-
-  // Insert message
-  await db.insert(messages).values({
-    conversationId,
-    role,
-    content,
-  });
-
+  await createMessage({ conversationId, role, content });
   return new NextResponse(null, { status: 201 });
 }
 
-// Returns ALL messages belonging to the conversationId from the query
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   const { error, user } = await getUser();
+  if (error || !user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  if (error || !user) {
-    console.error(error);
-    return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-    });
-  }
-
-  const { searchParams } = new URL(req.url);
-  const conversationId = searchParams.get("conversationId");
-
-  if (!conversationId) {
-    return new NextResponse(
-      JSON.stringify({ error: "Missing conversationId" }),
+  const conversationId = new URL(req.url).searchParams.get("conversationId");
+  const parsed = getMessagesSchema.safeParse({ conversationId });
+  if (!parsed.success)
+    return NextResponse.json(
+      { error: parsed.error.flatten() },
       { status: 400 },
     );
-  }
 
-  // Check that the conversation belongs to the user
-  const [conversation] = await db
-    .select()
-    .from(conversations)
-    .where(
-      and(
-        eq(conversations.id, conversationId),
-        eq(conversations.userId, user.id),
-      ),
-    )
-    .limit(1);
+  const allowed = await verifyUserOwnsAdventure(
+    parsed.data.conversationId,
+    user.id,
+  );
+  if (!allowed)
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  if (!conversation) {
-    return new NextResponse(JSON.stringify({ error: "Forbidden" }), {
-      status: 403,
-    });
-  }
-
-  // Fetch messages for that conversation
-  const convoMessages = await db
-    .select()
-    .from(messages)
-    .where(eq(messages.conversationId, conversationId))
-    .orderBy(messages.createdAt);
-
+  const convoMessages = await getMessagesForConversation(
+    parsed.data.conversationId,
+  );
   return NextResponse.json(convoMessages);
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE(req: NextRequest) {
   const { error, user } = await getUser();
+  if (error || !user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  if (error || !user) {
-    return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-    });
-  }
+  const messageId = new URL(req.url).searchParams.get("messageId");
+  const parsed = deleteMessageSchema.safeParse({ messageId });
+  if (!parsed.success)
+    return NextResponse.json(
+      { error: parsed.error.flatten() },
+      { status: 400 },
+    );
 
-  const { searchParams } = new URL(req.url);
-  const messageId = searchParams.get("messageId");
+  const msg = await getMessageWithOwner(parsed.data.messageId);
+  if (!msg)
+    return NextResponse.json({ error: "Message not found" }, { status: 404 });
+  if (msg.userId !== user.id)
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  if (!messageId) {
-    return new NextResponse(JSON.stringify({ error: "Missing messageId" }), {
-      status: 400,
-    });
-  }
-
-  // First, fetch the message and join with conversation to check ownership
-  const [messageWithConvo] = await db
-    .select({
-      messageId: messages.id,
-      conversationId: messages.conversationId,
-      userId: conversations.userId,
-    })
-    .from(messages)
-    .innerJoin(conversations, eq(messages.conversationId, conversations.id))
-    .where(eq(messages.id, messageId))
-    .limit(1);
-
-  if (!messageWithConvo) {
-    return new NextResponse(JSON.stringify({ error: "Message not found" }), {
-      status: 404,
-    });
-  }
-
-  if (messageWithConvo.userId !== user.id) {
-    return new NextResponse(JSON.stringify({ error: "Forbidden" }), {
-      status: 403,
-    });
-  }
-
-  // Proceed to delete
-  await db.delete(messages).where(eq(messages.id, messageId));
-
+  await deleteMessageById(parsed.data.messageId);
   return new NextResponse(null, { status: 204 });
 }
