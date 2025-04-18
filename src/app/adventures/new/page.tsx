@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { db } from "@/db";
 import { characters, adventures } from "@/db/schema";
-import { CharacterSheet } from "@/types/character";
 import { getUser } from "@/utils/supabase/server";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
