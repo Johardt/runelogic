@@ -36,7 +36,7 @@ export default function RootLayout({
             <div className="container flex items-center justify-between mx-auto">
               <div className="flex items-center space-x-2 align-middle">
                 <Link href="/" className="text-xl font-bold">
-                  AI Dungeon Master
+                  AI Dungeon World
                 </Link>
                 <Badge className="inline-flex items-center align-middle bg-yellow-100 px-2 py-0.5 text-xs font-semibold text-yellow-800 border border-yellow-300">
                   PREVIEW
