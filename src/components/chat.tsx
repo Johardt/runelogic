@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useChat } from "@ai-sdk/react";
 import { ChatInput } from "@/components/chat-input";
-import { AiModelType } from "@/db/schema";
 import { decrypt } from "@/utils/encryption";
 import { STORAGE_KEYS } from "@/utils/local-storage";
 
@@ -11,9 +10,9 @@ interface ChatProps {
 
 export default function Chat({ conversationId }: ChatProps) {
   const [clientSettings, setClientSettings] = useState<{
-    storageType: string | null;
+    storageType: "client" | "server" | null;
     apiKey: string | null;
-    model: AiModelType | null;
+    model: string | null;
   } | null>(null);
 
   const { messages, input, handleInputChange, append, setMessages, setInput } =
@@ -33,14 +32,13 @@ export default function Chat({ conversationId }: ChatProps) {
       },
     });
 
-  
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Function to scroll to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollTo({
       top: messagesEndRef.current.scrollHeight,
-      behavior: "smooth", 
+      behavior: "smooth",
     });
   };
 
@@ -77,7 +75,7 @@ export default function Chat({ conversationId }: ChatProps) {
           if (encryptedApiKey) {
             const apiKey = await decrypt(encryptedApiKey, key);
             const model = encryptedModel
-              ? ((await decrypt(encryptedModel, key)) as AiModelType)
+              ? await decrypt(encryptedModel, key)
               : null;
             setClientSettings({ storageType, apiKey, model });
           }

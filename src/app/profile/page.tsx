@@ -1,6 +1,10 @@
 import { redirect } from "next/navigation";
 import { getUser } from "@/utils/supabase/server";
-import { selectUserInfo, insertUserInfo, updateUserInfo } from "./actions";
+import {
+  getUserInfo,
+  insertUserInfo,
+  updateUserInfoSecure,
+} from "@/db/services/userInfos";
 import { Input } from "@/components/ui/input";
 import {
   Card,
@@ -13,8 +17,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Toaster } from "@/components/ui/sonner";
 import { SubmitButton } from "../../components/submit-button";
-import { ApiSettings } from "@/components/api-settings";
-import { AiModelType } from "@/db/schema";
+import { ApiSettings } from "@/components/settings/api-settings";
 
 export default async function PrivatePage() {
   const { error, user } = await getUser();
@@ -22,25 +25,25 @@ export default async function PrivatePage() {
     redirect("/login");
   }
 
-  let userInfos = await selectUserInfo(user.id);
+  let [userInfo] = await getUserInfo(user.id);
 
-  if (userInfos.length === 0) {
+  if (!userInfo) {
     console.log("No user info object found. Creating new");
-    userInfos = await insertUserInfo(user.id);
+    const [inserted] = await insertUserInfo(user.id);
+    userInfo = inserted;
   }
-
-  const userInfo = userInfos[0];
 
   async function handleFormAction(formData: FormData) {
     "use server";
 
     const username = formData.get("username") as string;
 
-    await updateUserInfo({
+    await updateUserInfoSecure({
       id: userInfo.id,
       username,
-      openaiApiKey: userInfo.openaiApiKey || "", // Handle null case
-      aiModel: (userInfo.aiModel || "gpt-4o-mini") as AiModelType, // Handle null case
+      openaiApiKey: userInfo.openaiApiKey ?? undefined,
+      googleApiKey: userInfo.googleApiKey ?? undefined,
+      aiModel: userInfo.aiModel ?? "gpt-4o-mini",
     });
 
     // Force a complete refresh of the page to get fresh data

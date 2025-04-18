@@ -62,3 +62,17 @@ export async function updateUserInfoSecure({
     .where(eq(userInfos.id, id))
     .returning();
 }
+
+export async function insertUserInfo(userId: string) {
+  const encryptedEmpty = encrypt("");
+  return db
+    .insert(userInfos)
+    .values({
+      id: userId,
+      username: "",
+      openaiApiKey: encryptedEmpty,
+      googleApiKey: encryptedEmpty,
+      aiModel: "gpt-4o-mini",
+    })
+    .returning();
+}

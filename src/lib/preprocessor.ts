@@ -1,5 +1,5 @@
 import { OpenAIProvider } from "@ai-sdk/openai";
-import { generateObject } from "ai";
+import { generateObject, LanguageModel } from "ai";
 import { z } from "zod";
 
 export interface PreprocessedInput {
@@ -27,12 +27,11 @@ const preprocessSchema = z.object({
 
 export async function preprocessInput(
   userMessage: string,
-  openai: OpenAIProvider,
-  model: string,
+  model: LanguageModel,
 ): Promise<PreprocessedInput> {
   try {
     const { object } = await generateObject({
-      model: openai("gpt-4.1-mini"), // Cheaper model for preprocessing
+      model: model,
       schema: preprocessSchema,
       temperature: 0.2,
       system: `
