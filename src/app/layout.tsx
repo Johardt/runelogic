@@ -2,8 +2,14 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
-import { AuthButtons } from "@/components/auth-buttons";
+import { AccountButtons } from "@/components/account-buttons";
 import { Badge } from "@/components/ui/badge";
+import { AccountSidebar } from "@/components/account-sidebar";
+import { getUser } from "@/utils/supabase/server";
+import { db } from "@/db";
+import { userInfos } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { getUserInfo } from "@/db/services/userInfos";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,11 +26,21 @@ export const metadata: Metadata = {
   description: "",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+
+  let username;
+  const { user } = await getUser();
+    if (user) {
+      let [userInfo] = await getUserInfo(user.id);
+      username = userInfo.username
+    }
+  
+    
+
   return (
     <html lang="en">
       <body
@@ -43,7 +59,13 @@ export default function RootLayout({
                 </Badge>
               </div>
               <nav className="space-x-4">
-                <AuthButtons />
+                <div className="block md:hidden">
+                  <AccountSidebar username={username || "Adventurer"} />
+                </div>
+
+                <div className="hidden md:block">
+                  <AccountButtons />
+                </div>
               </nav>
             </div>
           </header>

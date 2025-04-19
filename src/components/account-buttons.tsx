@@ -7,20 +7,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { DropdownMenu, DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 import { DropdownMenuContent, DropdownMenuTrigger } from "./ui/dropdown-menu";
 
-export async function AuthButtons() {
-  const { error, user } = await getUser();
-  if (error || !user) {
-    return (
-      <div className="flex-row">
-        <Link href="/login" className="mx-5 text-neutral-800">
-          Log in
-        </Link>
-        <Link href="/signup" className="mx-5 text-neutral-800">
-          Sign up
-        </Link>
-      </div>
-    );
-  } else {
+export async function AccountButtons() {
+  const { user } = await getUser();
+  if (user) {
     return (
       <div className="flex flex-row items-center space-x-4">
         <Link href="/characters" className="flex items-center">
