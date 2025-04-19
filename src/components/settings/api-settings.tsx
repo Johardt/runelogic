@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { JSX } from "react";
 import { Bot, BrainCircuit, Zap } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function ApiSettings() {
   const {
@@ -81,30 +82,36 @@ export function ApiSettings() {
 
           <div className="space-y-2">
             <Label htmlFor="api_key">OpenAI API Key</Label>
-            <Input
-              id="api_key"
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-            />
+            {isLoading ? (
+              <Skeleton className="h-10 w-full rounded-md" />
+            ) : (
+              <Input
+                id="api_key"
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+              />
+            )}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="google_api_key">Google API Key</Label>
-            <Input
-              id="google_api_key"
-              type="password"
-              value={googleApiKey}
-              onChange={(e) => setGoogleApiKey(e.target.value)}
-            />
+            {isLoading ? (
+              <Skeleton className="h-10 w-full rounded-md" />
+            ) : (
+              <Input
+                id="google_api_key"
+                type="password"
+                value={googleApiKey}
+                onChange={(e) => setGoogleApiKey(e.target.value)}
+              />
+            )}
           </div>
 
           <div className="space-y-2">
             <Label>Default Model</Label>
             {isLoading ? (
-              <div className="text-sm text-muted-foreground">
-                Loading models…
-              </div>
+              <Skeleton className="h-10 w-50 rounded-md" />
             ) : (
               <Select value={model} onValueChange={(val) => setModel(val)}>
                 <SelectTrigger className="justify-start text-left">
@@ -133,7 +140,6 @@ export function ApiSettings() {
                     })()}
                   </div>
                 </SelectTrigger>
-
                 <SelectContent>
                   {["openai", "google"].map((vendor, idx, arr) => {
                     const vendorModels = models.filter(
