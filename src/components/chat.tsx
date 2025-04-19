@@ -15,22 +15,29 @@ export default function Chat({ conversationId }: ChatProps) {
     model: string | null;
   } | null>(null);
 
-  const { messages, input, handleInputChange, append, setMessages, setInput } =
-    useChat({
-      api: "/api/chat",
-      body: { clientSettings, conversationId },
-      onFinish: async (message) => {
-        // Save assistant message to DB
-        await fetch("/api/messages", {
-          method: "POST",
-          body: JSON.stringify({
-            conversationId,
-            role: message.role,
-            content: message.content,
-          }),
-        });
-      },
-    });
+  const {
+    messages,
+    input,
+    handleInputChange,
+    append,
+    setMessages,
+    setInput,
+    status,
+  } = useChat({
+    api: "/api/chat",
+    body: { clientSettings, conversationId },
+    onFinish: async (message) => {
+      // Save assistant message to DB
+      await fetch("/api/messages", {
+        method: "POST",
+        body: JSON.stringify({
+          conversationId,
+          role: message.role,
+          content: message.content,
+        }),
+      });
+    },
+  });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -90,7 +97,7 @@ export default function Chat({ conversationId }: ChatProps) {
   // Form submission handler
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!input.trim()) return;
+    if (status !== "ready" || !input.trim()) return;
 
     const userMessage = {
       role: "user" as const,
@@ -140,9 +147,19 @@ export default function Chat({ conversationId }: ChatProps) {
               Your adventure begins here...
             </div>
           ) : (
-            messages.map((message) => (
-              <div key={message.id}>{renderMessageParts(message)}</div>
-            ))
+            <>
+              {messages.map((message) => (
+                <div key={message.id}>{renderMessageParts(message)}</div>
+              ))}
+              {status === "submitted" && (
+                <div className="whitespace-pre-wrap p-3 rounded">
+                  <span className="font-bold">AI: </span>
+                  <span className="italic text-muted-foreground">
+                    Thinking…
+                  </span>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -152,6 +169,7 @@ export default function Chat({ conversationId }: ChatProps) {
           input={input}
           handleInputChange={handleInputChange}
           handleSubmit={handleSubmit}
+          status={status}
         />
       </div>
     </div>
