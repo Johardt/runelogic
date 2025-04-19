@@ -1,10 +1,10 @@
 import React from "react";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
 interface ChatInputProps {
   input: string;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleSubmit: (e: React.FormEvent) => void;
 }
 
@@ -14,19 +14,28 @@ export function ChatInput({
   handleSubmit,
 }: ChatInputProps) {
   return (
-    <div className="fixed bottom-8 left-0 right-0 p-4">
+    <div className="fixed bottom-8 left-0 right-0 px-4">
       <div className="max-w-2xl mx-auto">
         <form
           onSubmit={handleSubmit}
-          className="flex w-full items-center space-x-2 border rounded-lg p-2 bg-white shadow-md"
+          className="flex w-full items-end space-x-2 rounded-xl p-3 bg-card text-card-foreground shadow-sm border border-border"
         >
-          <Input
+          <Textarea
             value={input}
-            placeholder="What do you do?"
             onChange={handleInputChange}
-            className="flex-1"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit(e);
+              }
+            }}
+            placeholder="What do you do?"
+            rows={1}
+            className="flex-1 resize-none !text-[16px] leading-relaxed bg-transparent border-none shadow-none focus-visible:ring-0 focus-visible:outline-none"
           />
-          <Button type="submit">Send</Button>
+          <Button type="submit" className="h-10 px-4">
+            Send
+          </Button>
         </form>
       </div>
     </div>

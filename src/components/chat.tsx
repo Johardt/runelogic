@@ -115,8 +115,8 @@ export default function Chat({ conversationId }: ChatProps) {
 
   const renderMessageParts = (message: any) => (
     <div
-      className={`whitespace-pre-wrap p-3 border rounded ${
-        message.role === "assistant" ? "bg-gray-50" : ""
+      className={`whitespace-pre-wrap p-3 rounded ${
+        message.role === "assistant" ? "" : "bg-card text-card-foreground"
       }`}
     >
       <span className="font-bold">

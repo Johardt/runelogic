@@ -28,11 +28,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-neutral-100`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <div className="flex flex-col h-screen overflow-hidden">
           {/* Header Bar */}
-          <header className="sticky top-0 left-0 right-0 z-50 px-6 py-4 bg-white border-b text-neutral-800 border-neutral-300">
+          <header className="sticky top-0 left-0 right-0 z-50 px-6 py-4 border-b border-neutral-300 bg-[var(--header-background)] shadow-md shadow-[var(--header-shadow)] relative before:absolute before:top-0 before:left-0 before:right-0 before:h-[2px] before:bg-[var(--accent)]">
             <div className="container flex items-center justify-between mx-auto">
               <div className="flex items-center space-x-2 align-middle">
                 <Link href="/" className="text-xl font-bold">
@@ -49,7 +49,9 @@ export default function RootLayout({
           </header>
 
           {/* Main Content */}
-          <main className="flex-1 overflow-auto container p-6 mx-auto">{children}</main>
+          <main className="flex-1 overflow-auto container p-6 mx-auto">
+            {children}
+          </main>
         </div>
       </body>
     </html>

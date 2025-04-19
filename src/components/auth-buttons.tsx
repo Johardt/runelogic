@@ -41,11 +41,11 @@ export async function AuthButtons() {
               </Avatar>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="min-w-[200px] mt-2 p-1 bg-white shadow-md rounded-md">
+          <DropdownMenuContent className="min-w-[200px] mt-2 p-1 bg-popover shadow-md rounded-md">
             <DropdownMenuItem asChild>
               <Link
                 href="/profile"
-                className="flex items-center px-3 py-2 rounded hover:bg-gray-100"
+                className="flex items-center px-3 py-2 rounded hover:bg-muted"
               >
                 My Account
               </Link>
@@ -53,7 +53,7 @@ export async function AuthButtons() {
             <DropdownMenuItem asChild>
               <Link
                 href="/logout"
-                className="flex items-center px-3 py-2 rounded hover:bg-gray-100"
+                className="flex items-center px-3 py-2 rounded hover:bg-muted"
               >
                 <LogOut color="black" />
                 <span className="mx-2">Log out</span>
