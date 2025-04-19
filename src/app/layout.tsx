@@ -6,10 +6,8 @@ import { AccountButtons } from "@/components/account-buttons";
 import { Badge } from "@/components/ui/badge";
 import { AccountSidebar } from "@/components/account-sidebar";
 import { getUser } from "@/utils/supabase/server";
-import { db } from "@/db";
-import { userInfos } from "@/db/schema";
-import { eq } from "drizzle-orm";
 import { getUserInfo } from "@/db/services/userInfos";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,7 +20,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Dungeon master",
+  title: "AI Dungeon World",
   description: "",
 };
 
@@ -31,21 +29,19 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-
   let username;
   const { user } = await getUser();
-    if (user) {
-      let [userInfo] = await getUserInfo(user.id);
-      username = userInfo.username
-    }
-  
-    
+  if (user) {
+    let [userInfo] = await getUserInfo(user.id);
+    username = userInfo.username;
+  }
 
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <SpeedInsights />
         <div className="flex flex-col h-screen overflow-hidden">
           {/* Header Bar */}
           <header className="sticky top-0 left-0 right-0 z-50 px-6 py-4 border-b border-neutral-300 bg-[var(--header-background)] shadow-md shadow-[var(--header-shadow)] relative before:absolute before:top-0 before:left-0 before:right-0 before:h-[2px] before:bg-[var(--accent)]">
