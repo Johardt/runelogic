@@ -5,7 +5,6 @@ import { eq, desc } from "drizzle-orm";
 import { getUser } from "@/utils/supabase/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ConversationCard } from "@/components/conversation-card";
 import { Play } from "lucide-react";
 import { ConversationCardList } from "@/components/conversation-card-list";
 
