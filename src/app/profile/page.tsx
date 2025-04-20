@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Toaster } from "@/components/ui/sonner";
 import { SubmitButton } from "../../components/submit-button";
 import { ApiSettings } from "@/components/settings/api-settings";
+import { Button } from "@/components/ui/button";
 
 export default async function PrivatePage() {
   const { error, user } = await getUser();
@@ -78,7 +79,12 @@ export default async function PrivatePage() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-end">
-            <SubmitButton />
+            <Button
+              type="submit"
+              className="cursor-pointer"
+            >
+              Save Changes
+            </Button>
           </CardFooter>
         </form>
       </Card>

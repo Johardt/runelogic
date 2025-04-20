@@ -40,6 +40,7 @@ export function CharacterCreationForm({ classes }: CharacterCreationFormProps) {
     {},
   );
   const [alignment, setAlignment] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedClass = classes.find(
     (cls) => cls.className === selectedClassName,
@@ -76,10 +77,12 @@ export function CharacterCreationForm({ classes }: CharacterCreationFormProps) {
   const router = useRouter();
 
   const handleSubmit = async () => {
-    if (!isComplete) {
+    if (!isComplete || isSubmitting) { // Prevent submission if already submitting
       toast.error("Please complete all required fields.");
       return;
     }
+
+    setIsSubmitting(true);
 
     const characterData = {
       className: selectedClassName,
@@ -102,7 +105,7 @@ export function CharacterCreationForm({ classes }: CharacterCreationFormProps) {
 
     const payload = {
       userId: data.user.id,
-      character_sheet: characterData,
+      characterSheet: characterData,
     };
 
     try {
@@ -119,6 +122,8 @@ export function CharacterCreationForm({ classes }: CharacterCreationFormProps) {
     } catch (err) {
       console.error("Submission error:", err);
       toast.error("Something went wrong.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -312,8 +317,12 @@ export function CharacterCreationForm({ classes }: CharacterCreationFormProps) {
       )}
 
       <div className="text-center">
-        <Button onClick={handleSubmit} disabled={!isComplete} className="mt-4">
-          Submit Character
+        <Button
+          onClick={handleSubmit}
+          disabled={!isComplete || isSubmitting}
+          className="mt-4 cursor-pointer"
+        >
+          {isSubmitting ? "Saving..." : "Submit Character"}
         </Button>
       </div>
 

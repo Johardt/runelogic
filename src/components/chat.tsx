@@ -14,6 +14,7 @@ export default function Chat({ conversationId }: ChatProps) {
     apiKey: string | null;
     model: string | null;
   } | null>(null);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(true);
 
   const {
     messages,
@@ -27,7 +28,6 @@ export default function Chat({ conversationId }: ChatProps) {
     api: "/api/chat",
     body: { clientSettings, conversationId },
     onFinish: async (message) => {
-      // Save assistant message to DB
       await fetch("/api/messages", {
         method: "POST",
         body: JSON.stringify({
@@ -41,7 +41,6 @@ export default function Chat({ conversationId }: ChatProps) {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Function to scroll to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollTo({
       top: messagesEndRef.current.scrollHeight,
@@ -51,25 +50,40 @@ export default function Chat({ conversationId }: ChatProps) {
 
   // Scroll to bottom whenever messages update
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (!isLoadingMessages) {
+      scrollToBottom();
+    }
+  }, [messages, isLoadingMessages]);
 
   // Load past messages on mount
   useEffect(() => {
+    let isMounted = true;
+    setIsLoadingMessages(true);
     fetch(`/api/messages?conversationId=${conversationId}`)
       .then((res) => res.json())
       .then((data) => {
-        const formatted = data.map((m: any) => ({
-          id: m.id,
-          role: m.role,
-          content: m.content,
-        }));
-        setMessages(formatted);
+        if (isMounted) {
+          const formatted = data.map((m: any) => ({
+            id: m.id,
+            role: m.role,
+            content: m.content,
+          }));
+          setMessages(formatted);
+        }
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => {
+        if (isMounted) {
+          setIsLoadingMessages(false);
+          setTimeout(scrollToBottom, 0);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [conversationId, setMessages]);
 
-  // Load client config
   useEffect(() => {
     const loadClientSettings = async () => {
       const storageType = localStorage.getItem(STORAGE_KEYS.STORAGE_TYPE);
@@ -94,7 +108,6 @@ export default function Chat({ conversationId }: ChatProps) {
     loadClientSettings();
   }, []);
 
-  // Form submission handler
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (status !== "ready" || !input.trim()) return;
@@ -113,8 +126,6 @@ export default function Chat({ conversationId }: ChatProps) {
         content: input,
       }),
     });
-
-    // Stream assistant response via append (triggers onFinish)
     append(userMessage);
 
     setInput("");
@@ -142,7 +153,11 @@ export default function Chat({ conversationId }: ChatProps) {
     <div className="flex flex-col h-full max-w-2xl w-full mx-auto pb-16">
       <div ref={messagesEndRef} className="flex-1 overflow-y-auto">
         <div className="p-4 space-y-4">
-          {messages.length === 0 ? (
+          {isLoadingMessages ? (
+            <div className="py-8 text-center text-gray-500">
+              Loading messages...
+            </div>
+          ) : messages.length === 0 ? (
             <div className="py-8 text-center text-gray-500">
               Your adventure begins here...
             </div>
@@ -164,14 +179,16 @@ export default function Chat({ conversationId }: ChatProps) {
         </div>
       </div>
 
-      <div className="p-4 border-neutral-300">
-        <ChatInput
-          input={input}
-          handleInputChange={handleInputChange}
-          handleSubmit={handleSubmit}
-          status={status}
-        />
-      </div>
+      {!isLoadingMessages && (
+        <div className="p-4 border-neutral-300">
+          <ChatInput
+            input={input}
+            handleInputChange={handleInputChange}
+            handleSubmit={handleSubmit}
+            status={status}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -4,7 +4,9 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   const body = await req.json();
+  console.log(body);
   const parsed = insertCharacterSchema.safeParse(body);
+  console.log("Parsed: " + parsed);
 
   if (!parsed.success) {
     return NextResponse.json(
