@@ -1,4 +1,3 @@
-// components/ui/AccountSidebar.tsx
 "use client";
 
 import {
@@ -13,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
 import { Users, Mail, Settings, LogOut } from "lucide-react";
 import Link from "next/link";
+import { LogoutButton } from "./logout-button";
 
 interface AccountSidebarProps {
   username: string;
@@ -68,16 +68,7 @@ export function AccountSidebar({ username }: AccountSidebarProps) {
               Settings
             </Link>
           </Button>
-          <Button
-            asChild
-            variant="ghost"
-            className="justify-start text-destructive"
-          >
-            <Link href="/logout" onClick={() => setOpen(false)}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Log out
-            </Link>
-          </Button>
+          <LogoutButton className="w-full" onLogoutAction={() => setOpen(false)} />
         </nav>
       </SheetContent>
     </Sheet>

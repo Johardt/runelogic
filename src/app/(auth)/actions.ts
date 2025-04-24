@@ -6,22 +6,37 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { insertUserInfo } from "@/db/services/userInfos";
 
-// Update the function signature to accept prevState
 export async function login(prevState: any, formData: FormData) {
   const supabase = await createClient();
 
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
-  const data = {
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
-  };
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
 
-  const { error } = await supabase.auth.signInWithPassword(data);
+  // Get current (anonymous) user ID
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const anonUserId = session?.user?.id;
+  const isAnon = session?.user?.is_anonymous;
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
   if (error) {
-    // Return an error object instead of redirecting
     return { message: `Login failed: ${error.message}` };
+  }
+
+  const newUserId = data?.user?.id;
+
+  if (isAnon && anonUserId && newUserId && anonUserId !== newUserId) {
+    // TODO: Missing endpoint
+    await fetch("/api/user/migrate", {
+      method: "POST",
+      body: JSON.stringify({ from: anonUserId, to: newUserId }),
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   revalidatePath("/", "layout");
@@ -31,25 +46,32 @@ export async function login(prevState: any, formData: FormData) {
 export async function signup(formData: FormData) {
   const supabase = await createClient();
 
-  const data = {
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
-  };
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
 
-  const { data: user, error } = await supabase.auth.signUp(data);
+  const { error: emailError } = await supabase.auth.updateUser({ email });
 
-  if (error) {
-    return { message: `Signup failed: ${error.message}` };
+  if (emailError) {
+    if (emailError?.message.includes("already registered")) {
+      return {
+        message: "This email is already in use. Please log in instead.",
+      };
+    } else {
+      return { message: `Email update failed: ${emailError.message}` };
+    }
   }
 
-  if (user?.user?.id) {
-    await insertUserInfo(user.user.id);
+  const { error: pwError } = await supabase.auth.updateUser({ password });
+
+  if (pwError) {
+    return { message: `Password setup failed: ${pwError.message}` };
   }
 
-  const { error: loginError } = await supabase.auth.signInWithPassword(data);
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData?.session?.user?.id;
 
-  if (loginError) {
-    return { message: `Login after signup failed: ${loginError.message}` };
+  if (userId) {
+    await insertUserInfo(userId);
   }
 
   revalidatePath("/", "layout");

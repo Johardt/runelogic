@@ -3,22 +3,22 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { db } from "@/db";
 import { characters, adventures } from "@/db/schema";
+import { selectCharacterSchema } from "@/db/validators/characters";
 import { getUser } from "@/utils/supabase/server";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
 export default async function NewAdventurePage() {
-  const { error, user } = await getUser();
+  const { user } = await getUser();
 
-  if (error || !user) {
-    redirect("/login");
+  let userCharacters: Array<typeof selectCharacterSchema._output> = [];
+
+  if (user) {
+    userCharacters = await db
+      .select()
+      .from(characters)
+      .where(eq(characters.userId, user.id));
   }
-
-  // Fetch user's characters
-  const userCharacters = await db
-    .select()
-    .from(characters)
-    .where(eq(characters.userId, user.id));
 
   // Server action to create a new adventure with selected character
   async function startNewAdventure(formData: FormData) {
@@ -32,7 +32,7 @@ export default async function NewAdventurePage() {
     }
 
     const { user } = await getUser();
-    if (!user) redirect("/login");
+    if (!user) redirect("/");
 
     // Create new conversation/adventure with the selected character
     const [newConvo] = await db

@@ -1,4 +1,6 @@
+import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
+import { characters } from "../schema";
 
 export const characterSheetSchema = z.object({
   look: z.record(z.string()),
@@ -18,6 +20,8 @@ export const characterSheetSchema = z.object({
   className: z.string(),
   damage_die: z.string(),
 });
+
+export const selectCharacterSchema = createSelectSchema(characters);
 
 export const insertCharacterSchema = z.object({
   userId: z.string().uuid(),
