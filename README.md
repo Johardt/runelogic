@@ -4,16 +4,15 @@ An AI-powered dungeon master web application that provides an immersive role-pla
 
 ## TODO - Minimum Loveable Product
 
-- Make it work without account
 - Onboarding, help tooltips
 - Scenarios, NPCs with Character Sheets, ...
-- Finish rebrand - font, design, ...
 
 ## TODO - Roadmap to 1.0
 
 - Quests
 - Inventory System
 - Story Summary, Titles, auto summarization
+- Finish rebrand - font, design, ...
 
 ## TODO - Beyond 1.0
 
