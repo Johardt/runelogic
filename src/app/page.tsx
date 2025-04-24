@@ -4,28 +4,56 @@ import { adventures } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { getUser } from "@/utils/supabase/server";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { Play } from "lucide-react";
 import { ConversationCardList } from "@/components/conversation-card-list";
+import { getUserInfo } from "@/db/services/userInfos";
+import { selectAdventureSchema } from "@/db/validators/adventures";
 
 export default async function Home() {
-  const { error, user } = await getUser();
+  const { user } = await getUser();
 
-  if (error || !user) {
-    redirect("/login");
+  let recentConversations: Array<typeof selectAdventureSchema._output> = [];
+  let username = "Adventurer";
+
+  if (user) {
+    const [userInfo] = await getUserInfo(user.id);
+    if (userInfo?.username) {
+      username = userInfo.username;
+    }
+
+    recentConversations = await db
+      .select()
+      .from(adventures)
+      .where(eq(adventures.userId, user.id))
+      .orderBy(desc(adventures.createdAt))
+      .limit(5);
   }
-
-  const userId = user.id;
-
-  const recentConversations = await db
-    .select()
-    .from(adventures)
-    .where(eq(adventures.userId, userId))
-    .orderBy(desc(adventures.createdAt)) // descending order
-    .limit(5);
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
+      {user && !user.email && (
+        <div className="border border-yellow-300 bg-yellow-100 text-yellow-900 p-4 rounded-md shadow-sm mb-6">
+          <div className="flex justify-between items-center flex-col md:flex-row gap-3 md:gap-0">
+            <span>
+              You&apos;re playing as a guest. Your adventures are stored
+              temporarily and may be lost if you clear your browser data.
+            </span>
+            <div className="flex gap-2">
+              <Link href="/signup">
+                <Button size="sm" variant="default" className="cursor-pointer">
+                  Sign Up
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button size="sm" variant="outline" className="cursor-pointer">
+                  Log In
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Link href="/adventures/new" passHref>
         <Button
           size="lg"

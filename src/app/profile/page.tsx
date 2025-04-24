@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { getUser } from "@/utils/supabase/server";
 import {
   getUserInfo,
@@ -16,14 +15,24 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Toaster } from "@/components/ui/sonner";
-import { SubmitButton } from "../../components/submit-button";
 import { ApiSettings } from "@/components/settings/api-settings";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton"; // optional
+import { redirect } from "next/navigation";
 
 export default async function PrivatePage() {
-  const { error, user } = await getUser();
-  if (error || !user) {
-    redirect("/login");
+  const { user } = await getUser();
+
+  if (!user) {
+    return (
+      <div className="container max-w-2xl mx-auto py-10 space-y-8">
+        <Card className="shadow-lg p-8">
+          <Skeleton className="h-6 w-1/3 mb-4" />
+          <Skeleton className="h-10 w-full mb-4" />
+          <Skeleton className="h-10 w-24" />
+        </Card>
+      </div>
+    );
   }
 
   let [userInfo] = await getUserInfo(user.id);
@@ -47,7 +56,6 @@ export default async function PrivatePage() {
       aiModel: userInfo.aiModel ?? "gpt-4o-mini",
     });
 
-    // Force a complete refresh of the page to get fresh data
     redirect("/profile");
   }
 
@@ -79,12 +87,7 @@ export default async function PrivatePage() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-end">
-            <Button
-              type="submit"
-              className="cursor-pointer"
-            >
-              Save Changes
-            </Button>
+            <Button type="submit">Save Changes</Button>
           </CardFooter>
         </form>
       </Card>

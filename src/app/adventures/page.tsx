@@ -4,39 +4,37 @@ import { adventures } from "@/db/schema";
 import { getUser } from "@/utils/supabase/server";
 import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { ConversationCard } from "@/components/conversation-card";
 import { ConversationCardList } from "@/components/conversation-card-list";
+import { selectAdventureSchema } from "@/db/validators/adventures";
 
 export default async function AdventuresPage() {
-  const { error, user } = await getUser();
+  const { user } = await getUser();
 
-  if (error || !user) {
-    redirect("/login");
+  let allConversations: Array<typeof selectAdventureSchema._output> = [];
+
+  if (user) {
+    allConversations = await db
+      .select()
+      .from(adventures)
+      .where(eq(adventures.userId, user.id))
+      .orderBy(desc(adventures.createdAt))
+      .limit(5);
   }
-
-  const userId = user.id;
-
-  const allConversations = await db
-    .select()
-    .from(adventures)
-    .where(eq(adventures.userId, userId))
-    .orderBy(desc(adventures.createdAt));
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Your Adventures</h1>
         <Link href="/adventures/new">
-          <Button className="cursor-pointer">
-            Start New Adventure
-          </Button>
+          <Button className="cursor-pointer">Start New Adventure</Button>
         </Link>
       </div>
 
       {allConversations.length === 0 ? (
         <div className="text-center p-12 border rounded-lg">
-          <p className="mb-4 text-gray-500">You haven&apos;t started any adventures yet.</p>
+          <p className="mb-4 text-gray-500">
+            You haven&apos;t started any adventures yet.
+          </p>
           <Link href="/adventures/new">
             <Button className="cursor-pointer">
               Start Your First Adventure
