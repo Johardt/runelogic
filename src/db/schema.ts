@@ -5,3 +5,5 @@ export * from "./schemas/userKeys";
 export * from "./schemas/messages";
 export * from "./schemas/classes";
 export * from "./schemas/characters";
+export * from "./schemas/chunkEmbeddings";
+export * from "./schemas/chunks";

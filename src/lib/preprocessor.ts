@@ -1,11 +1,16 @@
 import { generateObject, LanguageModel } from "ai";
 import { z } from "zod";
+import { getRelevantChunksForUserInput } from "./fetchRelevantChunks";
 
 export interface PreprocessedInput {
   isValid: boolean;
   inferredMove: string | null;
   requiresRoll: boolean;
   notesForSystemPrompt: string;
+  relevantChunks: {
+    title: string;
+    body: string;
+  }[];
 }
 
 const preprocessSchema = z.object({
@@ -70,7 +75,13 @@ You are the firewall protecting Dungeon World’s structure and fairness.
         },
       ],
     });
-    return object;
+
+    const relevantChunks = await getRelevantChunksForUserInput(userMessage, 5);
+
+    return {
+      ...object,
+      relevantChunks,
+    };
   } catch (error) {
     console.error("Preprocessing error:", error);
     // fallback
@@ -79,6 +90,7 @@ You are the firewall protecting Dungeon World’s structure and fairness.
       inferredMove: null,
       requiresRoll: false,
       notesForSystemPrompt: "No preprocessing analysis available.",
+      relevantChunks: [],
     };
   }
 }
