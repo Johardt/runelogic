@@ -1,6 +1,7 @@
 # Runelogic - AI Dungeon Master
 
-**Runelogic** is a web application designed to act as an AI-powered Dungeon Master (DM) for text-based role-playing games. It leverages modern AI models to provide an immersive and dynamic storytelling experience, complete with character management, rule adherence, and interactive chat.
+**Runelogic** is a web application designed to act as an AI-powered Dungeon Master (DM) for text-based role-playing games. It leverages modern AI techniques such as tools, RAG and agents to provide an immersive and dynamic storytelling experience, complete with character management, rule adherence, and interactive chat.
+If you've ever wished for something like AIDungeon that was able to adhere to actual RPG rules and can't be gaslit, Runelogic attempts to fulfill that wish.
 Based on Dungeon World by Sage LaTorra and Adam Koebel.
 
 <!-- Add a screenshot or GIF here -->
@@ -14,7 +15,7 @@ Based on Dungeon World by Sage LaTorra and Adam Koebel.
 - **AI-Powered Narrative:** Utilizes large language models (LLMs) via OpenAI and Google APIs to generate dynamic storylines, NPC interactions, and world descriptions based on player actions. Makes use of modern LLM techniques such as agents, RAG, and tool calling.
 - **Character Creation & Management:** Allows users to create detailed characters with stats and backstories, persisted via a database.
 - **Interactive Chat Interface:** Provides a real-time chat interface for players to interact with the AI DM and progress the adventure.
-- **Rule Enforcement:** Incorporates [Dungeon World RPG](https://www.dungeonworldsrd.com/) rule sets to guide the AI's decisions and maintain game consistency.
+- **Rule Enforcement:** Incorporates [Dungeon World RPG](https://www.dungeonworldsrd.com/) rule sets to guide the AI's decisions and maintain game consistency. Able to read the rules, character sheets, and roll dice to decide your fate.
 - **User Accounts & Data Persistence:** Secure user authentication and data storage using Supabase.
 - **Flexible API Key Management:** Users can securely store their OpenAI/Google API keys either server-side (encrypted) or locally on their device.
 - **Guest Mode:** Allows users to try the application and engage in adventures without creating an account.
