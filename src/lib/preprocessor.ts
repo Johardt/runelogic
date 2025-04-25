@@ -1,4 +1,3 @@
-import { OpenAIProvider } from "@ai-sdk/openai";
 import { generateObject, LanguageModel } from "ai";
 import { z } from "zod";
 
