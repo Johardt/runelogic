@@ -1,6 +1,7 @@
 # Runelogic - AI Dungeon Master
 
 **Runelogic** is a web application designed to act as an AI-powered Dungeon Master (DM) for text-based role-playing games. It leverages modern AI models to provide an immersive and dynamic storytelling experience, complete with character management, rule adherence, and interactive chat.
+Based on Dungeon World by Sage LaTorra and Adam Koebel.
 
 <!-- Add a screenshot or GIF here -->
 <!-- ![Screenshot](link/to/screenshot.png) -->
@@ -10,7 +11,7 @@
 
 ## Features
 
-- **AI-Powered Narrative:** Utilizes large language models (LLMs) via OpenAI and Google APIs to generate dynamic storylines, NPC interactions, and world descriptions based on player actions.
+- **AI-Powered Narrative:** Utilizes large language models (LLMs) via OpenAI and Google APIs to generate dynamic storylines, NPC interactions, and world descriptions based on player actions. Makes use of modern LLM techniques such as agents, RAG, and tool calling.
 - **Character Creation & Management:** Allows users to create detailed characters with stats and backstories, persisted via a database.
 - **Interactive Chat Interface:** Provides a real-time chat interface for players to interact with the AI DM and progress the adventure.
 - **Rule Enforcement:** Incorporates [Dungeon World RPG](https://www.dungeonworldsrd.com/) rule sets to guide the AI's decisions and maintain game consistency.
@@ -118,7 +119,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to see the a
 - [ ] Player Inventory Management.
 - [ ] Adventure Summarization & Title Generation.
 - [ ] Refined UI/UX, potentially custom font and design system polish.
-- [ ] Implement basic rule enforcement logic for the AI DM.
+- [ ] Implement basic rule enforcement logic for the AI DM. Fiction Log, World State, ...
 
 ### Beyond 1.0
 

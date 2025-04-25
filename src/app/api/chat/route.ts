@@ -1,4 +1,3 @@
-import { createOpenAI } from "@ai-sdk/openai";
 import { streamText } from "ai";
 import {
   createFetchCharacterSheetTool,
@@ -13,7 +12,7 @@ import { models } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getUserInfo } from "@/db/services/userInfos";
 import { getLanguageModel } from "@/lib/models/router";
-import { gameMasterPrompt } from "@/lib/prompts/game-master";
+import { dungeonWorldSystemPrompt } from "@/lib/prompts/game-master";
 
 export async function POST(req: Request) {
   const { messages, clientSettings, conversationId } = await req.json();
@@ -108,7 +107,7 @@ export async function POST(req: Request) {
   try {
     const result = streamText({
       model: modelRunner,
-      system: gameMasterPrompt,
+      system: dungeonWorldSystemPrompt,
       messages: [planningNoteMessage, ...messages],
       tools: {
         roll_dice: rollDiceTool,

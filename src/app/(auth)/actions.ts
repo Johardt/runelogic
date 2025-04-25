@@ -32,11 +32,11 @@ export async function login(prevState: any, formData: FormData) {
 
   if (isAnon && anonUserId && newUserId && anonUserId !== newUserId) {
     // TODO: Missing endpoint
-    await fetch("/api/user/migrate", {
-      method: "POST",
-      body: JSON.stringify({ from: anonUserId, to: newUserId }),
-      headers: { "Content-Type": "application/json" },
-    });
+    // await fetch("/api/user/migrate", {
+    //   method: "POST",
+    //   body: JSON.stringify({ from: anonUserId, to: newUserId }),
+    //   headers: { "Content-Type": "application/json" },
+    // });
   }
 
   revalidatePath("/", "layout");
